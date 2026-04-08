@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SO · Unidad 2 — Gestión de almacenamiento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --bg:#f5f4f0; --surface:#fff; --surface2:#eeecea; --border:#d8d5cf;
+  --text:#1a1917; --text2:#6b6760; --text3:#9b9890;
+  --accent:#2a52e8; --accent-bg:#eef1fd;
+  --green:#1a7a4a; --green-bg:#e8f5ee;
+  --amber:#a05a00; --amber-bg:#fdf3e3;
+  --red:#b83030;   --red-bg:#fdeaea;
+  --r:10px; --rl:16px;
+  --mono:'DM Mono',monospace; --sans:'DM Sans',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);font-size:15px;line-height:1.65;min-height:100vh}
+
+/* ── NAV ── */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;height:56px;position:sticky;top:0;z-index:100;gap:0}
+.nav-brand{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text);text-decoration:none;letter-spacing:.02em;margin-right:2rem;display:flex;align-items:center;gap:8px}
+.nav-brand .dot{width:8px;height:8px;background:var(--accent);border-radius:50%;display:inline-block}
+.nav-links{display:flex;gap:0;list-style:none;height:100%}
+.nav-links a{display:flex;align-items:center;height:100%;padding:0 1rem;font-size:13px;color:var(--text2);text-decoration:none;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;white-space:nowrap;cursor:pointer}
+.nav-links a:hover{color:var(--text)}
+.nav-links a.active{color:var(--accent);border-bottom-color:var(--accent)}
+
+/* ── LAYOUT ── */
+main{max-width:1400px;margin:0 auto;padding:2.5rem 2rem}
+.page{display:none}.page.active{display:block}
+.page-header{margin-bottom:2.5rem}
+.page-header .label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;margin-bottom:.4rem}
+.page-header h1{font-size:28px;font-weight:600;letter-spacing:-.02em;line-height:1.2}
+.page-header p{color:var(--text2);margin-top:.5rem;max-width:600px}
+
+/* ── CARDS & GRIDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem}
+.card+.card{margin-top:1rem}
+.card-title{font-size:14px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:8px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+
+/* ── PILLS ── */
+.pill{display:inline-flex;align-items:center;font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;gap:4px}
+.pill-blue{background:var(--accent-bg);color:var(--accent)}
+.pill-green{background:var(--green-bg);color:var(--green)}
+.pill-amber{background:var(--amber-bg);color:var(--amber)}
+.pill-red{background:var(--red-bg);color:var(--red)}
+.pill-gray{background:var(--surface2);color:var(--text2)}
+
+/* ── TABLE ── */
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;padding:.6rem .8rem;border-bottom:1px solid var(--border)}
+td{padding:.7rem .8rem;border-bottom:1px solid var(--surface2);color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+
+/* ── SECTION LABEL ── */
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem;margin-top:2rem}
+
+/* ── DISK COLORS ── */
+.cell-boot{background:#4a72f8;color:#fff}
+.cell-primary{background:#5b8dd9;color:#fff}
+.cell-extended{background:#2d6a4f;color:#fff}
+.cell-logical{background:#52b788;color:#fff}
+.cell-data{background:#1a7a4a;color:#fff}
+.cell-efi{background:#4a72f8;color:#fff}
+.cell-msr{background:#7a4ab8;color:#fff}
+.cell-gpt-backup{background:#d4720a;color:#fff}
+.cell-unassigned{background:var(--surface2);color:var(--text3);background-image:repeating-linear-gradient(45deg,transparent,transparent 4px,rgba(0,0,0,.04) 4px,rgba(0,0,0,.04) 8px)}
+
+/* ── DISK BAR (particiones page) ── */
+.disk-visual{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1.5rem}
+.disk-hdr{background:var(--surface2);padding:8px 14px;font-family:var(--mono);font-size:11px;color:var(--text3);border-bottom:1px solid var(--border);display:flex;justify-content:space-between}
+.disk-bar{display:flex;height:88px;width:100%}
+.seg{display:flex;flex-direction:column;justify-content:center;padding:0 10px;font-size:11px;font-weight:600;border-right:2px solid #fff;cursor:pointer;transition:filter .15s;overflow:hidden;min-width:0;flex-shrink:1;flex-grow:0}
+.seg:last-child{border-right:none}
+.seg:hover{filter:brightness(.92)}
+.seg .seg-name{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg .seg-size{font-family:var(--mono);font-size:10px;opacity:.8;white-space:nowrap}
+.seg .seg-type{font-size:9px;opacity:.7;margin-top:2px;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+/* segmentos angostos: solo muestran número, el texto va en la leyenda */
+.seg.narrow{padding:0;align-items:center;justify-content:center;flex-shrink:0}
+.seg.narrow .seg-num{font-family:var(--mono);font-size:15px;font-weight:600;color:#fff;line-height:1}
+.seg.narrow .seg-name,.seg.narrow .seg-size,.seg.narrow .seg-type{display:none}
+
+/* ── DETAIL BOX ── */
+.detail-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem;min-height:80px;font-size:13px}
+.detail-box strong{display:block;font-size:14px;margin-bottom:4px}
+.detail-box .meta{color:var(--text3);font-family:var(--mono);font-size:11px;margin-bottom:6px}
+
+/* ── LEGEND ── */
+.legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:1rem}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+.legend-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0}
+
+/* ── TABS ── */
+.scheme-tabs{display:flex;gap:8px;margin-bottom:1.5rem}
+.tab-btn{padding:6px 18px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--text2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s}
+.tab-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.scheme-panel{display:none}.scheme-panel.active{display:block}
+
+/* ── TIPO CARDS ── */
+.tipo-cards{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.tipo-card{border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;background:var(--surface)}
+.tipo-card h4{font-size:14px;font-weight:600;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.tipo-card ul{list-style:none;font-size:13px;color:var(--text2);display:flex;flex-direction:column;gap:4px}
+.tipo-card ul li::before{content:"·  ";color:var(--text3)}
+
+/* ── COMPARE ROW ── */
+.compare-row{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+
+/* ── FS PAGE ── */
+.fs-hero{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.fs-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.25rem;cursor:pointer;transition:border-color .15s,transform .15s}
+.fs-card:hover,.fs-card.selected{transform:translateY(-2px)}
+.fs-card.selected{border-width:2px}
+.fs-card .fs-name{font-family:var(--mono);font-size:18px;font-weight:500;margin-bottom:4px}
+.fs-card .fs-year{font-size:11px;color:var(--text3);margin-bottom:8px}
+.fat32-c{border-color:#5b8dd9}.fat32-c .fs-name{color:#2a52e8}.fat32-c.selected{border-color:#2a52e8}
+.ntfs-c{border-color:#1a7a4a}.ntfs-c .fs-name{color:#1a7a4a}.ntfs-c.selected{border-color:#1a7a4a}
+.exfat-c{border-color:#a05a00}.exfat-c .fs-name{color:#a05a00}.exfat-c.selected{border-color:#a05a00}
+.fat-c{border-color:#b83030}.fat-c .fs-name{color:#b83030}.fat-c.selected{border-color:#b83030}
+.compare-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:2rem}
+.compare-table table{margin:0}
+.compare-table th{background:var(--surface2);padding:10px 14px}
+.compare-table th.fs-th{font-family:var(--mono);font-size:13px;font-weight:500;letter-spacing:0;text-transform:none;color:var(--text)}
+.compare-table td{padding:10px 14px;font-size:13px}
+.compare-table tr:hover td{background:var(--bg)}
+.sem-wrap{display:flex;align-items:center;gap:6px;font-size:12px}
+.sem{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;font-size:12px;font-weight:700}
+.sem-green{background:var(--green-bg);color:var(--green)}
+.sem-amber{background:var(--amber-bg);color:var(--amber)}
+.sem-red{background:var(--red-bg);color:var(--red)}
+.fs-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;margin-bottom:2rem}
+.fs-detail h3{font-size:18px;font-weight:600;margin-bottom:1rem;display:flex;align-items:center;gap:10px}
+.fs-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.fs-stat{background:var(--bg);border-radius:var(--r);padding:.75rem 1rem}
+.fs-stat .label{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.fs-stat .value{font-size:20px;font-weight:600;margin-top:2px}
+.use-list{list-style:none;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--text2);margin-top:1rem}
+.use-list .ok::before{content:"✓  ";color:var(--green)}
+.use-list .no::before{content:"✗  ";color:var(--red)}
+
+/* ── USUARIOS PAGE ── */
+.user-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.25rem}
+.user-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;cursor:pointer;transition:border-color .15s,transform .15s}
+.user-card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.user-card-header{padding:1.25rem 1.25rem .75rem;display:flex;align-items:flex-start;gap:12px}
+.user-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:16px;font-weight:500;flex-shrink:0}
+.user-card-header h3{font-size:14px;font-weight:600;margin-bottom:2px}
+.user-card-header p{font-size:12px;color:var(--text2)}
+.user-disk{margin:0 1.25rem 1.25rem}
+.user-disk .disk-label{font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px}
+.disk-mini{display:flex;height:28px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.disk-mini .s{display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;border-right:1px solid rgba(255,255,255,.3);overflow:hidden;white-space:nowrap;padding:0 4px}
+.disk-mini .s:last-child{border-right:none}
+.user-tags{display:flex;flex-wrap:wrap;gap:5px;padding:0 1.25rem 1.25rem}
+
+/* ── MODAL ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-start;justify-content:center;padding:2rem 1.5rem;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);width:100%;max-width:1100px;position:relative}
+.modal-header{padding:1.5rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:14px}
+.modal-header h2{font-size:20px;font-weight:600;margin-bottom:4px}
+.modal-header p{font-size:13px;color:var(--text2)}
+.modal-close{position:absolute;top:1rem;right:1rem;background:var(--surface2);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.modal-body{padding:1.5rem}
+.disk-full{border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+.disk-full-header{background:var(--surface2);padding:6px 12px;font-family:var(--mono);font-size:11px;color:var(--text3);border-bottom:1px solid var(--border)}
+.disk-full-bar{display:flex;height:72px;width:100%}
+.df-seg{display:flex;flex-direction:column;justify-content:center;padding:0 8px;font-size:10px;font-weight:600;border-right:2px solid #fff;overflow:hidden;flex-shrink:1;flex-grow:0;min-width:0}
+.df-seg:last-child{border-right:none}
+.df-seg .sn{font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.df-seg .sz{font-family:var(--mono);font-size:9px;opacity:.8;white-space:nowrap}
+.df-seg .st{font-size:8px;opacity:.7;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.df-seg.narrow{align-items:center;justify-content:center;padding:0;flex-shrink:0}
+.df-seg.narrow .sn,.df-seg.narrow .sz,.df-seg.narrow .st{display:none}
+.df-seg.narrow .seg-num{font-family:var(--mono);font-size:15px;font-weight:600;color:#fff}
+/* leyenda numerada bajo el diagrama de disco del modal */
+.disk-legend{display:flex;flex-wrap:wrap;gap:6px 14px;padding:8px 10px;border-top:1px solid var(--border);background:var(--bg)}
+.disk-legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2)}
+.disk-legend-num{font-family:var(--mono);font-size:10px;font-weight:600;width:16px;height:16px;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0}
+/* Fix 3: minibar tarjetas solo color, sin texto */
+.disk-mini{display:flex;height:20px;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.disk-mini .s{flex-shrink:0;flex-grow:0;border-right:1px solid rgba(255,255,255,.25)}
+.disk-mini .s:last-child{border-right:none}
+.resp-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.resp-item{background:var(--bg);border-radius:var(--r);padding:.75rem 1rem;font-size:13px}
+.resp-item strong{display:block;font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:3px}
+
+/* ── GUIA CLASE ── */
+.meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.meta-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem;text-align:center}
+.meta-card .value{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--accent)}
+.meta-card .label{font-size:11px;color:var(--text3);margin-top:2px}
+.act-block{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;margin-bottom:1rem}
+.act-header{padding:1rem 1.25rem;display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none}
+.act-header:hover{background:var(--bg)}
+.act-num{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:14px;font-weight:500;flex-shrink:0}
+.act-meta{flex:1}
+.act-meta h3{font-size:15px;font-weight:600}
+.act-meta p{font-size:12px;color:var(--text2);margin-top:1px}
+.act-time{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--text3);flex-shrink:0}
+.act-chevron{color:var(--text3);transition:transform .2s;font-size:12px}
+.act-block.open .act-chevron{transform:rotate(90deg)}
+.act-body{display:none;border-top:1px solid var(--border);padding:1.25rem}
+.act-block.open .act-body{display:block}
+.step-list{list-style:none;display:flex;flex-direction:column;gap:10px}
+.step-item{display:flex;gap:10px;font-size:13px;color:var(--text2)}
+.step-bullet{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:6px}
+.step-item strong{color:var(--text)}
+.pregunta-box{background:var(--accent-bg);border:1px solid #c5d0f8;border-radius:var(--r);padding:.75rem 1rem;font-size:13px;margin-top:1rem}
+.pregunta-box .label{font-size:10px;font-family:var(--mono);color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.pregunta-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.pregunta-list li::before{content:"? ";color:var(--accent);font-weight:600}
+.resource-chip{display:inline-flex;align-items:center;gap:5px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:3px 10px;font-size:12px;color:var(--text2);margin:4px 4px 0 0}
+.progress-bar{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:.4rem}
+.progress-fill{height:100%;border-radius:4px;background:var(--accent)}
+
+/* ── HOME ── */
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:3rem 2.5rem;margin-bottom:2rem;display:flex;align-items:flex-start;gap:2rem}
+.hero-content{flex:1}
+.hero-label{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:.75rem}
+.hero h2{font-size:34px;font-weight:600;letter-spacing:-.03em;line-height:1.15;margin-bottom:.75rem}
+.hero h2 span{color:var(--accent)}
+.hero p{color:var(--text2);max-width:480px;font-size:15px}
+.hero-visual{flex-shrink:0;width:200px}
+.nav-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.nav-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:1.5rem;text-decoration:none;color:var(--text);display:flex;flex-direction:column;gap:.75rem;transition:border-color .15s,transform .15s;cursor:pointer}
+.nav-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.nav-card .icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px}
+.nav-card h3{font-size:15px;font-weight:600}
+.nav-card p{font-size:13px;color:var(--text2)}
+.nav-card .arrow{font-size:18px;color:var(--text3);margin-top:auto;transition:color .15s}
+.nav-card:hover .arrow{color:var(--accent)}
+.mini-disk{display:flex;flex-direction:column;gap:4px}
+.mini-row{display:flex;height:18px;border-radius:4px;overflow:hidden;gap:2px}
+.mini-seg{height:100%;border-radius:3px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:700px){
+  .grid-2,.grid-3,.tipo-cards,.compare-row,.fs-hero,.meta-grid{grid-template-columns:1fr}
+  nav{padding:0 1rem}
+  main{padding:1.5rem 1rem}
+  .fs-hero{grid-template-columns:1fr 1fr}
+  .meta-grid{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" onclick="showPage('inicio')"><span class="dot"></span> SO · Unidad 2</a>
+  <ul class="nav-links">
+    <li><a onclick="showPage('inicio')" id="nav-inicio" class="active">Inicio</a></li>
+    <li><a onclick="showPage('particiones')" id="nav-particiones">Particiones</a></li>
+    <li><a onclick="showPage('archivos')" id="nav-archivos">Sistemas de archivos</a></li>
+    <li><a onclick="showPage('usuarios')" id="nav-usuarios">Casos de usuario</a></li>
+    <li><a onclick="showPage('guia')" id="nav-guia">Guía de clase</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  INICIO                                    -->
+<!-- ══════════════════════════════════════════ -->
+<main>
+<div id="page-inicio" class="page active">
+  <div class="hero">
+    <div class="hero-content">
+      <p class="hero-label">5to Informática · Lab. de Sistemas Operativos</p>
+      <h2>Gestión de<br><span>almacenamiento</span></h2>
+      <p>Particionado, formateo y sistemas de archivos. Navegá cada sección para ver los conceptos, diagramas interactivos y los casos prácticos del TP.</p>
+    </div>
+    <div class="hero-visual">
+      <div class="mini-disk">
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:4px">MBR · HDD o SSD &lt; 2 TB</p>
+        <div class="mini-row">
+          <div class="mini-seg cell-boot" style="width:8%"></div>
+          <div class="mini-seg cell-primary" style="width:40%"></div>
+          <div class="mini-seg cell-extended" style="width:35%"></div>
+          <div class="mini-seg cell-unassigned" style="width:17%"></div>
+        </div>
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);margin:8px 0 4px">GPT · HDD o SSD, sin límite</p>
+        <div class="mini-row">
+          <div class="mini-seg cell-efi" style="width:5%"></div>
+          <div class="mini-seg cell-msr" style="width:3%"></div>
+          <div class="mini-seg cell-primary" style="width:45%"></div>
+          <div class="mini-seg cell-data" style="width:30%"></div>
+          <div class="mini-seg cell-unassigned" style="width:17%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-cards">
+    <div class="nav-card" onclick="showPage('particiones')">
+      <div class="icon" style="background:var(--accent-bg)">🗂️</div>
+      <h3>Particiones</h3>
+      <p>MBR vs GPT, tipos de partición, diagramas interactivos de disco.</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="nav-card" onclick="showPage('archivos')">
+      <div class="icon" style="background:var(--green-bg)">📋</div>
+      <h3>Sistemas de archivos</h3>
+      <p>Comparativa FAT32, NTFS, exFAT con tabla semáforo y casos de uso.</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="nav-card" onclick="showPage('usuarios')">
+      <div class="icon" style="background:var(--amber-bg)">👤</div>
+      <h3>Casos de usuario</h3>
+      <p>Tarjetas A–F del TP con diagramas de disco y soluciones propuestas.</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="nav-card" onclick="showPage('guia')">
+      <div class="icon" style="background:#f0eafd">📅</div>
+      <h3>Guía de clase</h3>
+      <p>Secuencia de 80 minutos con tiempos, preguntas y actividades.</p>
+      <span class="arrow">→</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  PARTICIONES                               -->
+<!-- ══════════════════════════════════════════ -->
+<div id="page-particiones" class="page">
+  <div class="page-header">
+    <p class="label">Unidad 2 · TP01</p>
+    <h1>Particiones</h1>
+    <p>División lógica del espacio físico de almacenamiento. Hacé clic en cada segmento del disco para ver los detalles.</p>
+  </div>
+
+  <p class="section-label" style="margin-top:0">Tipos de partición</p>
+  <div class="tipo-cards">
+    <div class="tipo-card">
+      <h4><span class="pill pill-blue">Primaria</span></h4>
+      <ul>
+        <li>Hasta 4 en MBR, hasta 128 en GPT</li>
+        <li>Pueden alojar un SO <strong>o</strong> datos del usuario</li>
+        <li>Tienen su propio sistema de archivos</li>
+        <li>En MBR: la "activa" es desde donde arranca el SO</li>
+        <li>El usuario común las usa siempre primero</li>
+      </ul>
+    </div>
+    <div class="tipo-card">
+      <h4><span class="pill pill-green">Extendida</span></h4>
+      <ul>
+        <li>Solo existe en MBR, ocupa el lugar de la 4ta primaria</li>
+        <li>No almacena archivos ni tiene sistema de archivos</li>
+        <li>Su única función es contener particiones lógicas</li>
+        <li>No existe en GPT (no es necesaria)</li>
+      </ul>
+    </div>
+    <div class="tipo-card">
+      <h4><span class="pill pill-amber">Lógica</span></h4>
+      <ul>
+        <li>Vive dentro de la partición extendida (solo MBR)</li>
+        <li>Solo para almacenamiento de datos</li>
+        <li>Hasta 23 lógicas en Windows</li>
+        <li>Poco usada: el usuario común agota las primarias primero</li>
+        <li>En GPT directamente no se necesita</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="section-label">Esquemas de particionamiento</p>
+  <div class="scheme-tabs">
+    <button class="tab-btn active" onclick="switchScheme('mbr',this)">MBR (BIOS/Legacy)</button>
+    <button class="tab-btn" onclick="switchScheme('gpt',this)">GPT (UEFI)</button>
+  </div>
+
+  <!-- MBR -->
+  <div id="panel-mbr" class="scheme-panel active">
+    <div class="disk-visual">
+      <div class="disk-hdr"><span>Disco 500 GB · Esquema MBR (HDD o SSD &lt; 2 TB)</span><span>Clic en cada segmento para ver detalles</span></div>
+      <div class="disk-bar">
+        <div class="seg cell-boot narrow" style="width:4%" onclick="showDetail('mbr','mbr-inicio')"><span class="seg-num">1</span></div>
+        <div class="seg cell-primary" style="width:28%" onclick="showDetail('mbr','mbr-p1')"><span class="seg-name">C:</span><span class="seg-size">150 GB</span><span class="seg-type">Primaria · SO o datos</span></div>
+        <div class="seg cell-primary" style="width:18%" onclick="showDetail('mbr','mbr-p2')"><span class="seg-name">D:</span><span class="seg-size">100 GB</span><span class="seg-type">Primaria · datos</span></div>
+        <div class="seg cell-extended" style="width:28%" onclick="showDetail('mbr','mbr-ext')"><span class="seg-name">Extendida</span><span class="seg-size">150 GB</span><span class="seg-type">→ lógicas E: F:</span></div>
+        <div class="seg cell-unassigned" style="width:18%" onclick="showDetail('mbr','mbr-free')"><span class="seg-name">Sin asignar</span><span class="seg-size">~80 GB</span></div>
+        <div class="seg cell-boot narrow" style="width:4%" onclick="showDetail('mbr','mbr-fin')"><span class="seg-num">2</span></div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#4a72f8"></div>1. Inicio MBR &nbsp;·&nbsp; 2. Fin MBR</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5b8dd9"></div>Partición primaria (SO o datos)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#2d6a4f"></div>Partición extendida (contenedor)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#52b788"></div>Partición lógica (datos)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Sin asignar</div>
+    </div>
+    <div class="detail-box" id="detail-mbr" style="margin-top:1rem"><strong>↑ Hacé clic en un segmento del disco</strong><span style="color:var(--text3);font-size:13px">Cada color representa un tipo de partición distinto.</span></div>
+    <div style="margin-top:1.5rem" class="compare-row">
+      <div class="card">
+        <div class="card-title">Características MBR</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li>📌 Máximo <strong style="color:var(--text)">4 particiones primarias</strong> (SO o datos)</li>
+          <li>📌 O bien: 3 primarias + 1 extendida (con lógicas)</li>
+          <li>📌 Compatible con HDD y SSD, hasta <strong style="color:var(--text)">2 TB</strong></li>
+          <li>📌 Compatible con BIOS y UEFI Legacy</li>
+          <li>📌 Un solo sector de arranque → punto único de falla</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">¿Cuándo usarlo?</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li>✓ Hardware antiguo con BIOS</li>
+          <li>✓ Discos reciclados (HDD o SSD) menores a 2 TB</li>
+          <li>✓ Compatibilidad máxima</li>
+          <li>✗ No apto para discos &gt; 2 TB</li>
+          <li>✗ No recomendado para Windows 11</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- GPT -->
+  <div id="panel-gpt" class="scheme-panel">
+    <div class="disk-visual">
+      <div class="disk-hdr"><span>Disco 480 GB · Esquema GPT (HDD o SSD, sin límite de tamaño)</span><span>Clic en cada segmento para ver detalles</span></div>
+      <div class="disk-bar">
+        <div class="seg narrow" style="background:#1c1c2e;color:#fff;width:3%" onclick="showDetail('gpt','gpt-pmbr')"><span class="seg-num">1</span></div>
+        <div class="seg narrow cell-efi" style="width:3%" onclick="showDetail('gpt','gpt-header')"><span class="seg-num">2</span></div>
+        <div class="seg narrow" style="background:#9c5fec;color:#fff;width:5%" onclick="showDetail('gpt','gpt-efi')"><span class="seg-num">3</span></div>
+        <div class="seg narrow" style="background:#7a4ab8;color:#fff;width:3%" onclick="showDetail('gpt','gpt-msr')"><span class="seg-num">4</span></div>
+        <div class="seg cell-primary" style="width:33%" onclick="showDetail('gpt','gpt-win')"><span class="seg-name">C: Windows</span><span class="seg-size">240 GB</span><span class="seg-type">Primaria · SO o datos</span></div>
+        <div class="seg cell-data" style="width:25%" onclick="showDetail('gpt','gpt-data')"><span class="seg-name">D: Datos</span><span class="seg-size">160 GB</span><span class="seg-type">Primaria · datos</span></div>
+        <div class="seg cell-unassigned" style="width:21%" onclick="showDetail('gpt','gpt-free')"><span class="seg-name">Sin asignar</span><span class="seg-size">~60 GB</span></div>
+        <div class="seg narrow cell-gpt-backup" style="width:4%" onclick="showDetail('gpt','gpt-backup')"><span class="seg-num">5</span></div>
+        <div class="seg narrow cell-efi" style="width:3%;opacity:.75" onclick="showDetail('gpt','gpt-fin')"><span class="seg-num">6</span></div>
+      </div>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#1c1c2e"></div>1. Protective MBR</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4a72f8"></div>2. Inicio cabecera GPT</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#9c5fec"></div>3. EFI System Partition (260 MB)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#7a4ab8"></div>4. Microsoft Reserved (MSR)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#5b8dd9"></div>Partición primaria (SO o datos)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#1a7a4a"></div>Partición primaria (datos)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--border)"></div>Sin asignar</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#d4720a"></div>5. Backup cabecera GPT</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4a72f8;opacity:.75"></div>6. Fin cabecera GPT</div>
+    </div>
+    <div class="detail-box" id="detail-gpt" style="margin-top:1rem"><strong>↑ Hacé clic en un segmento del disco</strong><span style="color:var(--text3);font-size:13px">GPT incluye particiones especiales para el arranque UEFI.</span></div>
+    <div style="margin-top:1.5rem" class="compare-row">
+      <div class="card">
+        <div class="card-title">Características GPT</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li>📌 Hasta <strong style="color:var(--text)">128 particiones primarias</strong> (SO o datos)</li>
+          <li>📌 Compatible con HDD y SSD, <strong style="color:var(--text)">sin límite de tamaño práctico</strong></li>
+          <li>📌 Cabecera con backup al final: más resiliente que MBR</li>
+          <li>📌 Protective MBR evita sobreescrituras accidentales</li>
+          <li>📌 Requiere firmware UEFI · Obligatorio para Windows 11</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="card-title">Partición EFI (ESP)</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li>✓ Se formatea en <strong style="color:var(--text)">FAT32</strong></li>
+          <li>✓ Contiene cargadores de arranque del SO</li>
+          <li>✓ Creada automáticamente al instalar el SO</li>
+          <li>✓ El firmware UEFI la lee al encender la PC</li>
+          <li>✓ Tamaño recomendado: 260 MB o más</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  SISTEMAS DE ARCHIVOS                      -->
+<!-- ══════════════════════════════════════════ -->
+<div id="page-archivos" class="page">
+  <div class="page-header">
+    <p class="label">Unidad 2 · TP01</p>
+    <h1>Sistemas de archivos</h1>
+    <p>Estructura que organiza cómo se almacena, lee y elimina la información en una partición. Seleccioná uno para ver sus detalles.</p>
+  </div>
+  <div class="fs-hero">
+    <div class="fs-card fat32-c selected" onclick="selectFS('fat32')"><div class="fs-name">FAT32</div><div class="fs-year">Desde 1996</div><span class="pill pill-blue" style="font-size:11px">Máxima compatibilidad</span></div>
+    <div class="fs-card ntfs-c" onclick="selectFS('ntfs')"><div class="fs-name">NTFS</div><div class="fs-year">Desde 1993</div><span class="pill pill-green" style="font-size:11px">Windows interno</span></div>
+    <div class="fs-card exfat-c" onclick="selectFS('exfat')"><div class="fs-name">exFAT</div><div class="fs-year">Desde 2006</div><span class="pill pill-amber" style="font-size:11px">Dispositivos externos</span></div>
+    <div class="fs-card fat-c" onclick="selectFS('fat')"><div class="fs-name">FAT</div><div class="fs-year">Desde 1977</div><span class="pill pill-red" style="font-size:11px">Legado</span></div>
+  </div>
+  <div class="fs-detail" id="fs-detail-box"></div>
+  <p class="section-label">Tabla comparativa</p>
+  <div class="compare-table">
+    <table>
+      <thead><tr>
+        <th style="width:220px">Criterio</th>
+        <th class="fs-th" style="color:#2a52e8">FAT32</th>
+        <th class="fs-th" style="color:#1a7a4a">NTFS</th>
+        <th class="fs-th" style="color:#a05a00">exFAT</th>
+        <th class="fs-th" style="color:#b83030">FAT</th>
+      </tr></thead>
+      <tbody>
+        <tr><td>Tamaño máximo de archivo</td><td><div class="sem-wrap"><span class="sem sem-amber">!</span> 4 GB</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> 16 TB</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> 16 EB</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> 4 GB</div></td></tr>
+        <tr><td>Tamaño máximo de partición</td><td><div class="sem-wrap"><span class="sem sem-amber">!</span> 2 TB</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> 16 EB</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> 16 EB</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> 4 GB</div></td></tr>
+        <tr><td>Compatibilidad (Windows)</td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Total</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Total</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Total</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Total</div></td></tr>
+        <tr><td>Compatibilidad (Mac / Linux)</td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td><td><div class="sem-wrap"><span class="sem sem-amber">!</span> Solo lectura</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td></tr>
+        <tr><td>Seguridad / permisos</td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> ACL completo</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td></tr>
+        <tr><td>Cifrado de archivos</td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> EFS / BitLocker</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td></tr>
+        <tr><td>Journaling (recuperación)</td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td><td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td></tr>
+        <tr><td>Ideal para</td><td style="font-size:12px">USB de arranque, dispositivos externos pequeños</td><td style="font-size:12px">Disco interno Windows, alta capacidad</td><td style="font-size:12px">USB/SSD externo, archivos &gt; 4 GB multiplataforma</td><td style="font-size:12px">Dispositivos muy antiguos</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="background:var(--accent-bg);border:1px solid #c5d0f8;border-radius:var(--r);padding:1rem 1.25rem;font-size:13px;color:var(--accent)">
+    <strong>Regla práctica:</strong> Disco interno Windows → <strong>NTFS</strong>. Pendrive para compartir entre equipos → <strong>exFAT</strong>. Pendrive de arranque (booteable) → <strong>FAT32</strong>.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  CASOS DE USUARIO                          -->
+<!-- ══════════════════════════════════════════ -->
+<div id="page-usuarios" class="page">
+  <div class="page-header">
+    <p class="label">Unidad 2 · Actividad 01</p>
+    <h1>Casos de usuario</h1>
+    <p>Hacé clic en cada tarjeta para ver el diagrama de disco completo y las respuestas sugeridas del TP.</p>
+  </div>
+  <div class="user-grid" id="user-grid"></div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  GUÍA DE CLASE                             -->
+<!-- ══════════════════════════════════════════ -->
+<div id="page-guia" class="page">
+  <div class="page-header">
+    <p class="label">Docente · Planificación</p>
+    <h1>Guía de clase — 80 minutos</h1>
+    <p>Secuencia para introducir el tema de gestión de almacenamiento. Hacé clic en cada acto para ver el detalle.</p>
+  </div>
+  <div class="meta-grid">
+    <div class="meta-card"><div class="value">80'</div><div class="label">Duración total</div></div>
+    <div class="meta-card"><div class="value">3</div><div class="label">Actos / bloques</div></div>
+    <div class="meta-card"><div class="value">5to</div><div class="label">Año / modalidad</div></div>
+    <div class="meta-card"><div class="value">A–F</div><div class="label">Casos de usuario</div></div>
+  </div>
+  <div class="card" style="margin-bottom:1.5rem">
+    <div class="card-title">Objetivos de la clase</div>
+    <ul class="step-list">
+      <li class="step-item"><div class="step-bullet"></div><div>Comprender qué es una partición y por qué se usa antes de instalar un SO.</div></li>
+      <li class="step-item"><div class="step-bullet"></div><div>Diferenciar los esquemas MBR y GPT, identificando cuándo usar cada uno.</div></li>
+      <li class="step-item"><div class="step-bullet"></div><div>Distinguir los tipos de partición (primaria, extendida, lógica) y los sistemas de archivos (FAT32, NTFS, exFAT).</div></li>
+      <li class="step-item"><div class="step-bullet"></div><div>Aplicar los conceptos en situaciones reales (casos A–F) mediante diagramas de disco.</div></li>
+    </ul>
+  </div>
+
+  <div class="act-block open" id="act1">
+    <div class="act-header" onclick="toggleAct('act1')">
+      <div class="act-num" style="background:var(--accent-bg);color:var(--accent)">1</div>
+      <div class="act-meta"><h3>El gancho — ¿Por qué ordenar el disco?</h3><p>Diagnóstico y analogía. Pizarrón o proyector.</p></div>
+      <span class="act-time">0–10'</span><span class="act-chevron">▶</span>
+    </div>
+    <div class="act-body">
+      <div class="progress-bar"><div class="progress-fill" style="width:12.5%"></div></div>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:1rem">10 min de 80</p>
+      <ul class="step-list">
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Analogía del departamento (4 min)</strong> — Dibujá en el pizarrón un plano vacío. Preguntá: "Si cuatro personas viven acá, ¿cómo dividirían el espacio?". Cuando empiecen a distribuir cuartos, decís: "Eso es exactamente un disco antes de usarlo".</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Diagnóstico inicial (4 min)</strong> — Ronda de preguntas al grupo para ver conocimientos previos. No hay respuestas incorrectas, solo contexto.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Cierre del gancho (2 min)</strong> — "Hoy vamos a aprender a diseñar esa distribución para un disco real, y al final van a hacerlo para distintos usuarios del TP".</div></li>
+      </ul>
+      <div class="pregunta-box">
+        <div class="label">Preguntas disparadoras</div>
+        <ul class="pregunta-list">
+          <li>¿Alguna vez formatearon un celular o una PC?</li>
+          <li>¿Saben qué le pasa a la información cuando se formatea?</li>
+          <li>¿Escucharon hablar del disco C: y D: en Windows?</li>
+          <li>¿Tienen idea de cómo el SO sabe dónde empieza y termina cada "sección"?</li>
+        </ul>
+      </div>
+      <div style="margin-top:1rem"><span class="resource-chip">🖊 Pizarrón</span><span class="resource-chip">💬 Participación oral</span></div>
+    </div>
+  </div>
+
+  <div class="act-block" id="act2">
+    <div class="act-header" onclick="toggleAct('act2')">
+      <div class="act-num" style="background:var(--green-bg);color:var(--green)">2</div>
+      <div class="act-meta"><h3>Construcción del concepto — MBR, GPT, particiones y sistemas de archivos</h3><p>Explicación con diagramas. Proyector + este sitio.</p></div>
+      <span class="act-time">10–45'</span><span class="act-chevron">▶</span>
+    </div>
+    <div class="act-body">
+      <div class="progress-bar"><div class="progress-fill" style="width:43.75%"></div></div>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:1rem">35 min de 80</p>
+      <ul class="step-list">
+        <li class="step-item"><div class="step-bullet"></div><div><strong>¿Qué es particionar? (5 min)</strong> — Mostrar la sección "Particiones". Usar el diagrama interactivo: hacé clic en cada segmento del disco MBR mientras explicás qué es cada parte.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>MBR vs GPT (8 min)</strong> — Cambiar al tab GPT. Enfatizar: la partición EFI, el backup header, la diferencia de límites. "¿Qué firmware tiene la PC de su casa?"</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Tipos de partición (7 min)</strong> — Las tres tarjetas. Primaria (SO o datos), Extendida (contenedor), Lógica (datos, pero raramente necesaria). "¿Puedo instalar un SO en una partición lógica?" → No.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Sistemas de archivos (10 min)</strong> — Ir a la sección de Sistemas de archivos. Seleccionar cada sistema y mostrar los detalles. La tabla semáforo es ideal para proyectar.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Formateo: los tres tipos (5 min)</strong> — Rápido (borra ruta), Normal/Completo (borra todo + verifica), Bajo nivel (sobrescribe). ¿Cuándo usar cada uno?</div></li>
+      </ul>
+      <div class="pregunta-box">
+        <div class="label">Preguntas de verificación durante la explicación</div>
+        <ul class="pregunta-list">
+          <li>Si tengo MBR y quiero 5 particiones primarias, ¿qué pasa?</li>
+          <li>¿Qué partición crea automáticamente Windows al instalar en GPT?</li>
+          <li>¿Puedo usar FAT32 para guardar una película de 8 GB?</li>
+          <li>¿Qué diferencia hay entre formatear rápido y formatear completo?</li>
+        </ul>
+      </div>
+      <div style="margin-top:1rem"><span class="resource-chip">🖥 Proyector</span><span class="resource-chip">📱 Tablets / celulares</span><span class="resource-chip">🌐 Este sitio</span></div>
+    </div>
+  </div>
+
+  <div class="act-block" id="act3">
+    <div class="act-header" onclick="toggleAct('act3')">
+      <div class="act-num" style="background:var(--amber-bg);color:var(--amber)">3</div>
+      <div class="act-meta"><h3>Práctica guiada — Diseñar el disco para un usuario real</h3><p>Trabajo en parejas con los casos A–F. Puesta en común.</p></div>
+      <span class="act-time">45–80'</span><span class="act-chevron">▶</span>
+    </div>
+    <div class="act-body">
+      <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+      <p style="font-size:12px;color:var(--text3);font-family:var(--mono);margin-bottom:1rem">35 min de 80</p>
+      <ul class="step-list">
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Asignación de casos (2 min)</strong> — Armar parejas. Asignar un Usuario a cada pareja (A–F). Si hay más de 6 parejas, duplicar usuarios: es útil comparar soluciones distintas al mismo problema.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Trabajo en parejas (20 min)</strong> — Cada pareja resuelve: (1) ¿Qué esquema de particionamiento usan? (2) Diseño del diagrama de disco. (3) Sistema de archivos para cada partición. Podés circular y guiar sin dar las respuestas.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Puesta en común (10 min)</strong> — Cada pareja muestra su diagrama. Mostrás la solución en este sitio (sección Casos de usuario) y comparan.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div><strong>Cierre (3 min)</strong> — La partición organiza el espacio; el sistema de archivos organiza los datos dentro de cada partición.</div></li>
+      </ul>
+      <div class="pregunta-box">
+        <div class="label">Preguntas para guiar durante la práctica</div>
+        <ul class="pregunta-list">
+          <li>¿Qué firmware tiene la PC del usuario?</li>
+          <li>¿El disco es de segunda mano? ¿Qué formateo hacemos antes?</li>
+          <li>¿Necesita más de 4 particiones? ¿Qué esquema conviene?</li>
+          <li>¿Va a compartir archivos con otra PC o SO?</li>
+        </ul>
+      </div>
+      <div style="margin-top:1rem"><span class="resource-chip">✏ Papel y lápiz</span><span class="resource-chip">📱 Tablets</span><span class="resource-chip">👥 Trabajo en parejas</span></div>
+    </div>
+  </div>
+
+  <p class="section-label" style="margin-top:2rem">Tips de gestión de clase</p>
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Si la clase se atrasa</div>
+      <ul class="step-list" style="font-size:13px;color:var(--text2)">
+        <li class="step-item"><div class="step-bullet"></div><div>Condensar MBR vs GPT en 5 min mostrando solo las diferencias clave.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div>Reducir las preguntas de diagnóstico a 2 en lugar de 4.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div>En la práctica, resolver solo 3 casos (A, B y E o F) como clase.</div></li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">Si la clase avanza rápido</div>
+      <ul class="step-list" style="font-size:13px;color:var(--text2)">
+        <li class="step-item"><div class="step-bullet"></div><div>Agregar la discusión sobre DiskPart y Disk Management de Windows.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div>Pedir a dos parejas con el mismo caso que comparen sus diagramas y justifiquen diferencias.</div></li>
+        <li class="step-item"><div class="step-bullet"></div><div>Plantear el siguiente TP: instalación en máquina virtual.</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- MODAL USUARIOS -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalBtn()">✕</button>
+    <div class="modal-header" id="modal-header"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ── NAVEGACIÓN ── */
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+/* ── PARTICIONES: esquemas y detalles ── */
+const details = {
+  'mbr-inicio':{ title:'Inicio de cabecera MBR', meta:'Tipo: Sector especial · Tamaño: 512 bytes · Posición: primer sector del disco', desc:'Primer sector del disco. Contiene el código de arranque maestro, la tabla de particiones del disco y la firma de arranque. Si se daña, el disco no puede utilizarse hasta reconstruirlo. Es el punto único de falla del esquema MBR, a diferencia de GPT que tiene copia de respaldo.' },
+  'mbr-p1':{ title:'Partición primaria C:', meta:'Tipo: Primaria activa · Tamaño: 150 GB · Sistema de archivos: NTFS', desc:'Las particiones primarias son el tipo principal de partición. Pueden usarse tanto para instalar un sistema operativo como para almacenar datos del usuario. En este caso aloja Windows; está marcada como "activa" para que el BIOS sepa desde dónde arrancar. El usuario común usa las primarias primero, antes de recurrir a lógicas.' },
+  'mbr-p2':{ title:'Partición primaria D:', meta:'Tipo: Primaria · Tamaño: 100 GB · Sistema de archivos: NTFS', desc:'Segunda partición primaria destinada a datos del usuario. No tiene SO, pero sigue siendo una partición primaria. Separarla del sistema operativo es buena práctica: si hay que formatear C:, los datos en D: no se ven afectados.' },
+  'mbr-ext':{ title:'Partición extendida', meta:'Tipo: Extendida · Tamaño: 150 GB · Sin sistema de archivos propio', desc:'Contenedor especial que ocupa el lugar de la cuarta partición primaria en MBR. No almacena archivos directamente ni se le asigna sistema de archivos. Su única función es contener particiones lógicas. En la práctica, el usuario común raramente llega a necesitarla: primero agota las primarias disponibles.' },
+  'mbr-free':{ title:'Espacio sin asignar', meta:'Estado: No particionado · Tamaño: ~80 GB', desc:'Espacio disponible para crear nuevas particiones en el futuro. No puede utilizarse para guardar archivos hasta que se le asigne una partición y un sistema de archivos.' },
+  'mbr-fin':{ title:'Fin de cabecera MBR', meta:'Tipo: Marcador de cierre · Posición: al final del espacio gestionado por MBR', desc:'Marca el límite final del espacio administrado por el esquema MBR. A diferencia de GPT, no contiene una copia de seguridad de la tabla de particiones. Si la cabecera de inicio MBR se corrompe, no hay manera automática de recuperarla desde este cierre.' },
+  'gpt-pmbr':{ title:'Protective MBR', meta:'Tipo: Sector de compatibilidad · Tamaño: 512 bytes · Posición: primer sector', desc:'Sector MBR que indica que el disco usa GPT. Su función es proteger el disco: si alguna herramienta antigua solo entiende MBR, verá este sector marcado como "ocupado" y no sobrescribirá el GPT por error. No es el arranque real; es solo un escudo de compatibilidad.' },
+  'gpt-header':{ title:'Inicio de cabecera GPT', meta:'Tipo: Cabecera primaria · Posición: LBA 1 (segundo sector)', desc:'Contiene la tabla de particiones GPT con la información de cada partición: GUID único, sector de inicio, sector de fin y atributos. También registra la ubicación del Backup al final del disco. Si se daña, el sistema busca automáticamente la copia de respaldo.' },
+  'gpt-efi':{ title:'EFI System Partition (ESP)', meta:'Tipo: EFI · Tamaño: 260 MB · Sistema de archivos: FAT32', desc:'Partición especial donde el firmware UEFI busca los cargadores de arranque. Contiene los archivos necesarios para iniciar Windows, Linux u otros SO instalados. Se formatea siempre en FAT32 para garantizar compatibilidad universal con cualquier firmware.' },
+  'gpt-msr':{ title:'Microsoft Reserved Partition (MSR)', meta:'Tipo: Reservada · Tamaño: 16 MB', desc:'Partición reservada por Windows para uso interno (por ejemplo, gestión de volúmenes dinámicos y actualizaciones). No tiene letra de unidad y no es visible en el Explorador de archivos. Windows la crea automáticamente al instalarse en un disco GPT.' },
+  'gpt-win':{ title:'Partición primaria C:', meta:'Tipo: Primaria · Tamaño: 240 GB · Sistema de archivos: NTFS', desc:'Partición primaria donde se instala el sistema operativo. Las particiones primarias en GPT pueden usarse tanto para SO como para datos del usuario. En GPT no existe el concepto de "partición activa"; el gestor de arranque en la ESP apunta a esta partición.' },
+  'gpt-data':{ title:'Partición primaria D: (datos)', meta:'Tipo: Primaria · Tamaño: 160 GB · Sistema de archivos: NTFS', desc:'Segunda partición primaria destinada al almacenamiento de datos del usuario. En GPT, todas las particiones de uso general son primarias: no hace falta recurrir a extendidas ni lógicas para tener varias particiones de datos. El usuario común siempre llena las primarias antes de necesitar lógicas.' },
+  'gpt-free':{ title:'Espacio sin asignar', meta:'Estado: No particionado · Tamaño: ~60 GB', desc:'Espacio reservado para expansión futura. Puede aprovecharse para crear nuevas particiones primarias o ampliar una existente con herramientas como Disk Management o DiskPart.' },
+  'gpt-backup':{ title:'Backup de cabecera GPT', meta:'Tipo: Copia de seguridad · Posición: penúltimo sector del disco', desc:'Copia completa de la cabecera GPT y la tabla de particiones. Ventaja clave de GPT sobre MBR: si la cabecera principal se daña, el sistema puede recuperarla automáticamente desde este backup. Es la razón por la que GPT es más resiliente ante fallos.' },
+  'gpt-fin':{ title:'Fin de cabecera GPT', meta:'Tipo: Marcador de cierre · Posición: último sector del disco', desc:'Marca el límite final del disco gestionado por GPT. Junto al backup de cabecera que lo precede, forma el cierre del esquema. A diferencia del fin MBR, aquí sí hay información de recuperación disponible gracias al backup.' }
+};
+
+function showDetail(scheme, key) {
+  const d = details[key]; if (!d) return;
+  document.getElementById('detail-' + scheme).innerHTML = `<strong>${d.title}</strong><div class="meta">${d.meta}</div><p>${d.desc}</p>`;
+}
+function switchScheme(scheme, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.scheme-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + scheme).classList.add('active');
+}
+
+/* ── SISTEMAS DE ARCHIVOS ── */
+const fsData = {
+  fat32:{ name:'FAT32', color:'#2a52e8', year:'1996', maxFile:'4 GB', maxPart:'2 TB', desc:'El formato más veterano en uso activo. Creado para reemplazar a FAT16, es compatible con prácticamente cualquier dispositivo incluyendo motherboards, consolas, cámaras y televisores. Su gran limitación es que no puede almacenar archivos mayores de 4 GB.', ok:['Máxima compatibilidad de hardware','Ideal para USBs de arranque (booteable)','Reconocido por firmware UEFI sin configuración'], no:['No soporta archivos mayores a 4 GB','Particiones máximas de 2 TB','Sin permisos ni cifrado','Mayor fragmentación de archivos'] },
+  ntfs:{ name:'NTFS', color:'#1a7a4a', year:'1993', maxFile:'16 TB', maxPart:'16 EB', desc:'Sistema de archivos de Microsoft, sucesor de FAT32. Diseñado para discos internos de Windows. Soporta permisos de acceso (ACL), cifrado (EFS/BitLocker), compresión, journaling para recuperación ante fallos, y archivos de hasta 16 TB. Es propietario: Mac y Linux solo pueden leerlo nativamente.', ok:['Ideal para disco interno de Windows','Permisos y seguridad por archivo/carpeta','Cifrado con BitLocker o EFS','Journaling: recuperación ante fallos','Archivos y particiones muy grandes'], no:['Mac y Linux: solo lectura nativa','No ideal para dispositivos extraíbles','Overkill para almacenamiento pequeño'] },
+  exfat:{ name:'exFAT', color:'#a05a00', year:'2006', maxFile:'16 EB', maxPart:'16 EB', desc:'Diseñado por Microsoft para reemplazar FAT32 en dispositivos externos. Es más liviano que NTFS (sin permisos ni journaling) pero sin las limitaciones de FAT32. Compatible de forma nativa con Windows, macOS y Linux.', ok:['Compatible con Windows, Mac y Linux','Sin límite práctico de tamaño de archivo','Más liviano que NTFS','Ideal para USBs y SSDs externos'], no:['Sin permisos ni cifrado','Sin journaling (más vulnerable a corrupción)','No apto para disco de arranque de Windows'] },
+  fat:{ name:'FAT', color:'#b83030', year:'1977', maxFile:'4 GB', maxPart:'4 GB', desc:'El sistema de archivos original de DOS. Todavía se usa en contextos muy específicos por su extrema simplicidad. Existen variantes (FAT12, FAT16, FAT32); en la práctica moderna, "FAT" sin más suele referir a FAT16. Prácticamente en desuso para almacenamiento general.', ok:['Compatibilidad con hardware muy antiguo','Estructura simple y de bajo nivel'], no:['Límite de volumen de solo 4 GB','Sin seguridad ni permisos','Sin journaling','No apto para uso moderno general'] }
+};
+
+function selectFS(key) {
+  document.querySelectorAll('.fs-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.' + key + '-c').classList.add('selected');
+  const d = fsData[key];
+  document.getElementById('fs-detail-box').innerHTML = `
+    <h3 style="color:${d.color}"><span style="font-family:var(--mono);font-size:22px">${d.name}</span><span class="pill pill-gray" style="font-size:11px">desde ${d.year}</span></h3>
+    <p style="font-size:14px;color:var(--text2);margin-bottom:1rem">${d.desc}</p>
+    <div class="fs-detail-grid" style="margin-bottom:1rem">
+      <div class="fs-stat"><div class="label">Archivo máximo</div><div class="value" style="color:${d.color}">${d.maxFile}</div></div>
+      <div class="fs-stat"><div class="label">Partición máxima</div><div class="value" style="color:${d.color}">${d.maxPart}</div></div>
+    </div>
+    <ul class="use-list">
+      ${d.ok.map(x=>`<li class="ok">${x}</li>`).join('')}
+      ${d.no.map(x=>`<li class="no">${x}</li>`).join('')}
+    </ul>`;
+}
+selectFS('fat32');
+
+/* ── CASOS DE USUARIO ── */
+const users = [
+  { id:'A', title:'Usuario A', desc:'HDD 500 GB · Windows 10 · 64 bits · 4 GB RAM', color:'#2a52e8', bg:'var(--accent-bg)', tags:['HDD 500 GB','Windows 10','MBR + GPT'], hardware:'PC 64 bits, 4 GB RAM DDR4, HDD 500 GB', uso:'Windows 10 como SO principal + información personal y trabajo',
+    disks:[
+      { label:'HDD 500 GB · Esquema MBR', segs:[{name:'Inicio MBR',w:3,c:'cell-boot'},{name:'C: Windows',size:'150 GB',type:'Primaria · SO · NTFS',w:30,c:'cell-primary'},{name:'D: Trabajo',size:'100 GB',type:'Primaria · datos · NTFS',w:20,c:'cell-primary'},{name:'E: Personal',size:'150 GB',type:'Lógica · NTFS',w:30,c:'cell-logical'},{name:'Sin asignar',size:'~80 GB',w:13,c:'cell-unassigned'},{name:'Fin MBR',w:4,c:'cell-boot'}]},
+      { label:'HDD 500 GB · Esquema GPT (alternativa)', segs:[{name:'EFI',size:'260MB',type:'FAT32',w:3,c:'cell-efi'},{name:'MSR',size:'16MB',w:3,c:'cell-msr'},{name:'C: Windows',size:'150 GB',type:'Primaria · SO · NTFS',w:27,c:'cell-primary'},{name:'D: Trabajo',size:'100 GB',type:'Primaria · NTFS',w:20,c:'cell-primary'},{name:'E: Personal',size:'150 GB',type:'Primaria · NTFS',w:25,c:'cell-data'},{name:'Sin asignar',size:'~80 GB',w:16,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) Tipo de formateo',a:'Formateo Normal-Completo. Al tener datos previos, se deben eliminar rutas y estructura de archivos, y verificar sectores defectuosos.'},
+      {q:'2) MBR: esquema',a:'Inicio MBR → Primaria activa C: (SO, 150 GB, NTFS) → Primaria D: (Trabajo, 100 GB, NTFS) → Extendida con lógica E: (Personal, 150 GB, NTFS) → Sin asignar → Fin MBR.'},
+      {q:'3) GPT: esquema',a:'EFI (260 MB, FAT32) → MSR (16 MB) → Primaria C: (SO) → Primaria D: (Trabajo) → Primaria E: (Personal) → Sin asignar → Backup cabecera GPT → Fin GPT.'},
+      {q:'4) Sistema de archivos',a:'NTFS para todas las particiones: soporta archivos grandes, permisos de acceso, journaling y cifrado.'}
+    ]
+  },
+  { id:'B', title:'Usuario B', desc:'SSD 480 GB · Windows 11 · 64 bits · 16 GB RAM', color:'#1a7a4a', bg:'var(--green-bg)', tags:['SSD 480 GB','Windows 11','GPT obligatorio'], hardware:'PC 64 bits, 16 GB RAM 3200MHz, SSD 480 GB', uso:'Windows 11 como SO principal + información personal',
+    disks:[
+      { label:'SSD 480 GB · Esquema GPT (obligatorio para Win11)', segs:[{name:'EFI',size:'260MB',type:'FAT32',w:3,c:'cell-efi'},{name:'MSR',size:'16MB',w:2,c:'cell-msr'},{name:'C: Windows 11',size:'250 GB',type:'Primaria · SO · NTFS',w:40,c:'cell-primary'},{name:'D: Personal',size:'180 GB',type:'Primaria · datos · NTFS',w:36,c:'cell-data'},{name:'Sin asignar',size:'~30 GB',w:13,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) Esquema de particiones',a:'GPT es obligatorio. Windows 11 requiere UEFI y GPT para instalarse. Además GPT soporta hasta 128 particiones primarias y tiene backup de cabecera.'},
+      {q:'2) Tipo de formato',a:'Formato Rápido para una unidad nueva (SSD sin datos previos). Si fuera de segunda mano: Formateo Normal-Completo para verificar sectores.'},
+      {q:'3) Sistema de archivos',a:'NTFS para todas las particiones internas. Permite permisos, cifrado BitLocker, journaling y archivos de hasta 16 TB.'}
+    ]
+  },
+  { id:'C', title:'Usuario C', desc:'SSD 500 GB + HDD 1 TB · Dual boot · 120 GB libres', color:'#a05a00', bg:'var(--amber-bg)', tags:['SSD 500 GB','HDD 1 TB','Dual boot'], hardware:'SSD 500 GB (para SOs) + HDD 1 TB (para datos)', uso:'Dos sistemas operativos en simultáneo + datos personales',
+    disks:[
+      { label:'SSD 500 GB · GPT · Sistemas operativos', segs:[{name:'EFI',size:'260MB',w:3,c:'cell-efi'},{name:'MSR',size:'16MB',w:2,c:'cell-msr'},{name:'C: Windows',size:'200 GB',type:'Primaria · NTFS',w:32,c:'cell-primary'},{name:'Linux',size:'150 GB',type:'Primaria · ext4',w:24,c:'cell-extended'},{name:'Swap',size:'8 GB',type:'Lógica Linux',w:6,c:'cell-logical'},{name:'Libre ≥120 GB',w:27,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]},
+      { label:'HDD 1 TB · GPT · Datos personales', segs:[{name:'EFI',w:3,c:'cell-efi'},{name:'Documentos',size:'250 GB',type:'Primaria · NTFS',w:25,c:'cell-data'},{name:'Multimedia',size:'300 GB',type:'Primaria · NTFS',w:30,c:'cell-data'},{name:'Backup',size:'80 GB',type:'Primaria · NTFS',w:17,c:'cell-primary'},{name:'Libre ≥220 GB',type:'≥15% sin asignar',w:19,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) Unidad para SOs',a:'SSD (500 GB) para los SO: mayor velocidad de lectura/escritura. HDD (1 TB) para datos: mayor capacidad a menor costo.'},
+      {q:'2) SSD: organización',a:'GPT: EFI → MSR → Partición Windows (NTFS) → Partición Linux (ext4) → Swap → al menos 120 GB sin asignar → Backup GPT → Fin GPT.'},
+      {q:'3) HDD: organización y sistemas de archivos',a:'GPT: EFI → Documentos (NTFS) → Multimedia (NTFS) → Backup (NTFS) → mínimo 220 GB libre + 15% sin asignar → Backup GPT → Fin GPT.'}
+    ]
+  },
+  { id:'D', title:'Usuario D', desc:'HDD 2 TB de segunda mano · 3 particiones + espacio libre', color:'#b83030', bg:'var(--red-bg)', tags:['HDD 2 TB','Segunda mano','GPT'], hardware:'HDD 2 TB adquirido en Mercado Libre, poco tiempo de uso', uso:'Guardar archivos importantes',
+    disks:[
+      { label:'HDD 2 TB · Esquema GPT · Solo almacenamiento', segs:[{name:'EFI',w:3,c:'cell-efi'},{name:'Archivos A',size:'600 GB',type:'Primaria · NTFS',w:28,c:'cell-primary'},{name:'Archivos B',size:'600 GB',type:'Primaria · NTFS',w:28,c:'cell-primary'},{name:'Backup datos',size:'400 GB',type:'Primaria · NTFS',w:24,c:'cell-data'},{name:'Sin asignar',size:'~400 GB',w:11,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) Previo a usar: tipo de formateo',a:'Formateo Bajo Nivel o Normal-Completo. Al ser de segunda mano: (a) borrar datos del dueño anterior, (b) verificar sectores defectuosos. El Formateo Rápido no es suficiente.'},
+      {q:'2) Esquema de particiones',a:'GPT: el HDD es de 2 TB, límite máximo para MBR. GPT no tiene esa restricción y tiene backup de cabecera.'},
+      {q:'3) Tipo de formato de particiones',a:'Formato Normal-Completo para la primera vez (verifica errores). Las tres particiones son primarias en GPT.'},
+      {q:'4) Sistema de archivos',a:'NTFS para las tres: el disco supera 2 TB (límite de FAT32), necesita soportar archivos grandes y está en un equipo Windows.'}
+    ]
+  },
+  { id:'E', title:'Usuario E', desc:'HDD 500 GB (MBR) + SSD 250 GB (GPT) en PC UEFI', color:'#7a4ab8', bg:'#f0eafd', tags:['HDD MBR','SSD GPT','UEFI','Esquemas mixtos'], hardware:'PC con firmware UEFI, HDD 500 GB (MBR, reciclado), SSD 250 GB (GPT)', uso:'Combinar ambas unidades con distintos esquemas',
+    disks:[
+      { label:'HDD 500 GB · Esquema MBR (heredado)', segs:[{name:'Inicio MBR',w:3,c:'cell-boot'},{name:'C: Datos',size:'200 GB',type:'Primaria · NTFS',w:38,c:'cell-primary'},{name:'D: Personal',size:'150 GB',type:'Primaria · NTFS',w:28,c:'cell-primary'},{name:'Extendida',size:'100 GB',type:'→ lógicas',w:21,c:'cell-extended'},{name:'Sin asignar',size:'~30 GB',w:6,c:'cell-unassigned'},{name:'Fin MBR',w:4,c:'cell-boot'}]},
+      { label:'SSD 250 GB · Esquema GPT (SO principal)', segs:[{name:'EFI',size:'260MB',type:'FAT32',w:4,c:'cell-efi'},{name:'MSR',size:'16MB',w:3,c:'cell-msr'},{name:'C: Windows',size:'150 GB',type:'Primaria · NTFS',w:47,c:'cell-primary'},{name:'D: Rápido',size:'60 GB',type:'Primaria · NTFS',w:28,c:'cell-data'},{name:'Sin asignar',size:'~20 GB',w:12,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) ¿Se pueden usar ambos esquemas en la misma PC?',a:'Sí. Una PC UEFI puede arrancar desde un disco GPT mientras los discos adicionales (aunque sean MBR) se usan como almacenamiento de datos.'},
+      {q:'2) ¿Cuándo cambiar el MBR del HDD?',a:'Si se desea agregar más de 4 particiones, si el disco supera 2 TB, o si se quiere uniformidad. También si hay problemas de corrupción del sector MBR.'},
+      {q:'3) Pasos previos para reutilizar el HDD',a:'(1) Copia de seguridad de los datos existentes. (2) Formateo Normal-Completo o Bajo Nivel para verificar sectores. (3) Si se cambia a GPT: reparticionar y formatear (se pierden todos los datos).'}
+    ]
+  },
+  { id:'F', title:'Usuario F', desc:'SSD 240 GB único · uso laboral y ofimática', color:'#1a5a3a', bg:'#e3f5ec', tags:['SSD 240 GB','Presupuesto limitado','GPT','Uso laboral'], hardware:'SSD 240 GB (único disco, SO + datos)', uso:'Trabajo, navegación web, ofimática. Posible expansión futura.',
+    disks:[
+      { label:'SSD 240 GB · Esquema GPT · Único disco', segs:[{name:'EFI',size:'260MB',type:'FAT32',w:3,c:'cell-efi'},{name:'MSR',size:'16MB',w:3,c:'cell-msr'},{name:'C: Windows',size:'100 GB',type:'Primaria · NTFS',w:38,c:'cell-primary'},{name:'D: Trabajo',size:'120 GB',type:'Primaria · NTFS',w:44,c:'cell-data'},{name:'Sin asignar',size:'~10 GB',w:6,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]},
+      { label:'HDD externo recomendado (futuro) · 1 TB · GPT', segs:[{name:'EFI',w:3,c:'cell-efi'},{name:'Documentos',size:'400 GB',type:'Primaria · NTFS',w:37,c:'cell-data'},{name:'Backup datos',size:'400 GB',type:'Primaria · NTFS',w:37,c:'cell-data'},{name:'Sin asignar',size:'~200 GB',w:17,c:'cell-unassigned'},{name:'Backup cabecera GPT',w:3,c:'cell-gpt-backup'},{name:'Fin GPT',w:3,c:'cell-efi'}]}
+    ],
+    respuestas:[
+      {q:'1) Esquema y particiones',a:'GPT para el SSD. Particiones: EFI (260 MB, FAT32) + MSR (16 MB) + C: Windows (~100 GB, NTFS) + D: Trabajo (~120 GB, NTFS).'},
+      {q:'2) Distribución de espacio',a:'100 GB para el SO (Windows ocupa ~30-50 GB; margen para apps). 120 GB para archivos de trabajo y ofimática. ~10 GB sin asignar como margen.'},
+      {q:'3a) ¿HDD o SSD para ampliar?',a:'HDD: mayor capacidad por menor precio. Para uso laboral (documentos, ofimática) no es crítica la velocidad extra de un SSD.'},
+      {q:'3b) Esquema y tipo de partición',a:'GPT con particiones primarias (no hace falta la extendida en GPT). Dos particiones: Documentos + Backup.'},
+      {q:'3c) Sistema de archivos recomendado',a:'NTFS: el HDD se usará solo en Windows, necesita soportar archivos grandes y NTFS ofrece journaling. Si se compartiera entre SO: exFAT.'}
+    ]
+  }
+];
+
+function buildMiniBar(segs) {
+  return segs.map(s=>`<div class="s ${s.c}" style="width:${s.w}%"></div>`).join('');
+}
+function buildFullBar(segs) {
+  let num = 0;
+  return segs.map(s=>{
+    const narrow = s.w<=5;
+    if(narrow) num++;
+    return `<div class="df-seg ${s.c}${narrow?' narrow':''}" style="width:${s.w}%;color:#fff">
+      ${narrow ? `<span class="seg-num" style="font-family:var(--mono);font-size:15px;font-weight:700;color:#fff">${num}</span>` : `
+      <span class="sn">${s.name}</span>
+      ${s.size?`<span class="sz">${s.size}</span>`:''}
+      ${s.type?`<span class="st">${s.type}</span>`:''}`}
+    </div>`;
+  }).join('');
+}
+function buildDiskLegend(segs) {
+  let num = 0;
+  const colorMap = {'cell-boot':'#4a72f8','cell-primary':'#5b8dd9','cell-extended':'#2d6a4f','cell-logical':'#52b788','cell-data':'#1a7a4a','cell-efi':'#4a72f8','cell-msr':'#7a4ab8','cell-gpt-backup':'#d4720a','cell-unassigned':'#d8d5cf'};
+  const items = segs.map(s=>{
+    const narrow = s.w<=5;
+    if(narrow) num++;
+    const bg = colorMap[s.c] || '#888';
+    const label = narrow ? `${num}. ${s.name}` : `${s.name}${s.size?' · '+s.size:''}`;
+    return `<div class="disk-legend-item"><div class="disk-legend-num" style="background:${bg}">${narrow?num:''}</div><span>${label}</span></div>`;
+  });
+  return `<div class="disk-legend">${items.join('')}</div>`;
+}
+
+const grid = document.getElementById('user-grid');
+users.forEach(u => {
+  const card = document.createElement('div');
+  card.className = 'user-card';
+  card.innerHTML = `
+    <div class="user-card-header">
+      <div class="user-avatar" style="background:${u.bg};color:${u.color}">${u.id}</div>
+      <div><h3>${u.title}</h3><p>${u.desc}</p></div>
+    </div>
+    <div class="user-disk">
+      <div class="disk-label">${u.disks[0].label}</div>
+      <div class="disk-mini">${buildMiniBar(u.disks[0].segs)}</div>
+    </div>
+    <div class="user-tags">${u.tags.map(t=>`<span class="pill pill-gray">${t}</span>`).join('')}</div>`;
+  card.onclick = () => openModal(u);
+  grid.appendChild(card);
+});
+
+function openModal(u) {
+  document.getElementById('modal-header').innerHTML = `
+    <div class="user-avatar" style="background:${u.bg};color:${u.color};font-size:20px">${u.id}</div>
+    <div><h2>${u.title}</h2><p>${u.hardware}</p><p style="color:var(--text3)">${u.uso}</p></div>`;
+  document.getElementById('modal-body').innerHTML =
+    u.disks.map(d=>`
+      <div class="disk-full">
+        <div class="disk-full-header">${d.label}</div>
+        <div class="disk-full-bar">${buildFullBar(d.segs)}</div>
+        ${buildDiskLegend(d.segs)}
+      </div>`).join('') +
+    `<ul class="resp-list">${u.respuestas.map(r=>`<li class="resp-item"><strong>${r.q}</strong>${r.a}</li>`).join('')}</ul>`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+function closeModal(e){ if(e.target===document.getElementById('modal-overlay')) closeModalBtn(); }
+function closeModalBtn(){ document.getElementById('modal-overlay').classList.remove('open'); }
+
+/* ── GUÍA DE CLASE ── */
+function toggleAct(id){ document.getElementById(id).classList.toggle('open'); }
+</script>
+</body>
+</html>
