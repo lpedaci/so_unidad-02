@@ -243,26 +243,121 @@ tr:hover td{background:var(--bg)}
 .mini-row{display:flex;height:18px;border-radius:4px;overflow:hidden;gap:2px}
 .mini-seg{height:100%;border-radius:3px}
 
+.nav-toggle{display:none} /* hidden on desktop, shown via media query */
 /* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .nav-links a{padding:0 .6rem;font-size:12px}
+  .nav-brand{margin-right:1rem}
+}
+
 @media(max-width:700px){
-  .grid-2,.grid-3,.tipo-cards,.compare-row,.fs-hero,.meta-grid{grid-template-columns:1fr}
-  nav{padding:0 1rem}
-  main{padding:1.5rem 1rem}
+  /* ── Nav: hamburger mobile ── */
+  nav{padding:0 1rem;position:relative;flex-wrap:wrap;height:auto;min-height:56px}
+  .nav-brand{height:56px;flex-shrink:0}
+  .nav-toggle{display:flex;align-items:center;justify-content:center;margin-left:auto;height:56px;background:none;border:none;cursor:pointer;padding:0 4px;color:var(--text2);font-size:20px;line-height:1}
+  .nav-links{
+    display:none;flex-direction:column;width:100%;
+    background:var(--surface);border-top:1px solid var(--border);
+    padding:.5rem 0;gap:0;height:auto;
+  }
+  .nav-links.open{display:flex}
+  .nav-links li{width:100%}
+  .nav-links a{height:44px;padding:0 1rem;font-size:14px;border-bottom:none;border-left:3px solid transparent;white-space:normal}
+  .nav-links a.active{border-left-color:var(--accent);background:var(--accent-bg)}
+
+  /* ── Layout ── */
+  main{padding:1.25rem .875rem}
+
+  /* ── Hero ── */
+  .hero{flex-direction:column;padding:1.25rem;gap:.75rem}
+  .hero h2{font-size:24px}
+  .hero-visual{display:none}
+  .page-header h1{font-size:22px}
+
+  /* ── Grids: todo a 1 columna ── */
+  .grid-2,.grid-3,.tipo-cards,.compare-row{grid-template-columns:1fr}
+  /* 2 columnas en mobile para fs-hero y meta-grid (son 4 items) */
   .fs-hero{grid-template-columns:1fr 1fr}
   .meta-grid{grid-template-columns:1fr 1fr}
+  /* nav-cards: 1 columna para texto legible */
+  .nav-cards{grid-template-columns:1fr}
+
+  /* ── Disk bar ── */
+  .disk-bar{height:60px}
+  .seg .seg-name{font-size:10px}
+  .seg .seg-size,.seg .seg-type{display:none}
+  .seg.narrow .seg-num{font-size:12px}
+  /* El disco en la página de particiones: scroll horizontal si no entra */
+  .disk-visual{overflow-x:auto}
+  .disk-bar{min-width:340px}
+
+  /* ── Modal: fullscreen ── */
+  .modal-overlay{padding:.375rem;align-items:flex-start}
+  .modal{border-radius:var(--r);max-height:calc(100vh - .75rem);overflow-y:auto}
+  .modal-header{padding:.875rem 1rem .625rem;gap:10px;flex-wrap:wrap}
+  .modal-header h2{font-size:17px}
+  .modal-body{padding:.875rem}
+  .disk-full-bar{height:52px;min-width:300px}
+  .disk-full{overflow-x:auto}
+  .df-seg .sn{font-size:9px}
+  .df-seg .sz,.df-seg .st{display:none}
+  .resp-list{gap:8px}
+  .resp-item{padding:.625rem .875rem;font-size:13px}
+
+  /* ── Tablas: scroll horizontal ── */
+  .compare-table{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .compare-table table{min-width:480px}
+  /* Tablas genéricas */
+  .card table,.card+.card table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+  /* ── Scheme tabs ── */
+  .scheme-tabs{flex-wrap:wrap;gap:6px}
+  .tab-btn{font-size:11px;padding:5px 12px}
+
+  /* ── Cards generales ── */
+  .card{padding:.875rem}
+  .card-title{font-size:13px}
+
+  /* ── Tipo cards ── */
+  .tipo-card{padding:1rem}
+
+  /* ── FS cards hero ── */
+  .fs-card{padding:1rem}
+  .fs-card .fs-name{font-size:15px}
+  .fs-detail-grid{grid-template-columns:1fr 1fr}
+
+  /* ── Guía de clase ── */
+  .act-header{padding:.875rem 1rem;gap:10px}
+  .act-num{width:30px;height:30px;font-size:12px}
+  .act-meta h3{font-size:14px}
+  .act-time{font-size:12px}
+  .act-body{padding:1rem}
+
+  /* ── Section label top margin ── */
+  .section-label{margin-top:1.25rem}
+}
+
+@media(max-width:420px){
+  .fs-hero{grid-template-columns:1fr}
+  .meta-grid{grid-template-columns:1fr}
+  .fs-detail-grid{grid-template-columns:1fr}
+  .disk-legend{gap:4px 8px}
+  .disk-legend-item{font-size:10px}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-brand" onclick="showPage('inicio')"><span class="dot"></span> SO · Unidad 2</a>
-  <ul class="nav-links">
-    <li><a onclick="showPage('inicio')" id="nav-inicio" class="active">Inicio</a></li>
-    <li><a onclick="showPage('particiones')" id="nav-particiones">Particiones</a></li>
-    <li><a onclick="showPage('archivos')" id="nav-archivos">Sistemas de archivos</a></li>
-    <li><a onclick="showPage('usuarios')" id="nav-usuarios">Casos de usuario</a></li>
-    <li><a onclick="showPage('guia')" id="nav-guia">Guía de clase</a></li>
+  <a class="nav-brand" onclick="showPage('inicio');closeNav()"><span class="dot"></span> SO · Unidad 2</a>
+  <button class="nav-toggle" id="nav-toggle" onclick="toggleNav()" aria-label="Menú">☰</button>
+  <ul class="nav-links" id="nav-links-list">
+    <li><a onclick="showPage('inicio');closeNav()" id="nav-inicio" class="active">Inicio</a></li>
+    <li><a onclick="showPage('particiones');closeNav()" id="nav-particiones">Particiones</a></li>
+    <li><a onclick="showPage('formateo');closeNav()" id="nav-formateo">Formateo</a></li>
+    <li><a onclick="showPage('archivos');closeNav()" id="nav-archivos">Sistemas de archivos</a></li>
+    <li><a onclick="showPage('usuarios');closeNav()" id="nav-usuarios">Casos de usuario</a></li>
+    <li><a onclick="showPage('guia');closeNav()" id="nav-guia">Guía de clase</a></li>
   </ul>
 </nav>
 
@@ -302,6 +397,12 @@ tr:hover td{background:var(--bg)}
       <div class="icon" style="background:var(--accent-bg)">🗂️</div>
       <h3>Particiones</h3>
       <p>MBR vs GPT, tipos de partición, diagramas interactivos de disco.</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="nav-card" onclick="showPage('formateo')">
+      <div class="icon" style="background:var(--red-bg)">🗑️</div>
+      <h3>Formateo</h3>
+      <p>Tipos de formateo: rápido, normal-completo y bajo nivel. Cuándo usar cada uno.</p>
       <span class="arrow">→</span>
     </div>
     <div class="nav-card" onclick="showPage('archivos')">
@@ -513,6 +614,167 @@ tr:hover td{background:var(--bg)}
   <div style="background:var(--accent-bg);border:1px solid #c5d0f8;border-radius:var(--r);padding:1rem 1.25rem;font-size:13px;color:var(--accent)">
     <strong>Regla práctica:</strong> Disco interno Windows → <strong>NTFS</strong>. Pendrive para compartir entre equipos → <strong>exFAT</strong>. Pendrive de arranque (booteable) → <strong>FAT32</strong>.
   </div>
+</div>
+
+<!-- ══════════════════════════════════════════ -->
+<!--  FORMATEO                                  -->
+<!-- ══════════════════════════════════════════ -->
+<div id="page-formateo" class="page">
+  <div class="page-header">
+    <p class="label">Unidad 2 · TP01</p>
+    <h1>Formateo</h1>
+    <p>Formatear es preparar una unidad de almacenamiento para ser usada, creando la estructura necesaria para guardar archivos. Hay tres tipos según la profundidad del proceso.</p>
+  </div>
+
+  <!-- CARDS DE LOS 3 TIPOS -->
+  <div class="grid-3" style="margin-bottom:2rem">
+
+    <div class="card" style="border-top:3px solid var(--accent)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">⚡</div>
+        <div>
+          <div style="font-weight:600;font-size:15px">Rápido</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">Quick Format</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem">Solo borra la tabla de rutas de archivos, sin tocar el contenido real del disco. El sistema de archivos queda intacto. No verifica el estado del disco.</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)">
+        <li style="color:var(--green)">✓ Muy rápido (segundos o minutos)</li>
+        <li style="color:var(--green)">✓ Mantiene el sistema de archivos</li>
+        <li style="color:var(--green)">✓ Mayor posibilidad de recuperar datos</li>
+        <li style="color:var(--red)">✗ No verifica sectores defectuosos</li>
+        <li style="color:var(--red)">✗ No borra realmente los datos</li>
+      </ul>
+      <div style="margin-top:1rem;padding:.75rem;background:var(--accent-bg);border-radius:var(--r);font-size:12px;color:var(--accent)">
+        <strong>Cuándo usarlo:</strong> Unidades nuevas o de confianza que queremos limpiar rápidamente sin necesidad de verificación.
+      </div>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--amber)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--amber-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔍</div>
+        <div>
+          <div style="font-weight:600;font-size:15px">Normal / Completo</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">Full Format</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem">Elimina todos los archivos, configuraciones y el sistema de archivos. Analiza el disco en busca de sectores defectuosos y los señala, aunque no los repara.</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)">
+        <li style="color:var(--green)">✓ Elimina archivos y sistema de archivos</li>
+        <li style="color:var(--green)">✓ Detecta sectores defectuosos</li>
+        <li style="color:var(--amber)">! Recuperar datos es difícil pero posible</li>
+        <li style="color:var(--red)">✗ No repara los sectores dañados</li>
+        <li style="color:var(--red)">✗ Más lento que el rápido</li>
+      </ul>
+      <div style="margin-top:1rem;padding:.75rem;background:var(--amber-bg);border-radius:var(--r);font-size:12px;color:var(--amber)">
+        <strong>Cuándo usarlo:</strong> Discos de segunda mano, discos con historial de problemas, o cuando queremos asegurarnos del estado de la unidad.
+      </div>
+    </div>
+
+    <div class="card" style="border-top:3px solid var(--red)">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem">
+        <div style="width:36px;height:36px;border-radius:8px;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔒</div>
+        <div>
+          <div style="font-weight:600;font-size:15px">Bajo nivel</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">Low-Level Format</div>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text2);margin-bottom:.75rem">Borra todos los datos y los sobrescribe, haciendo la recuperación prácticamente imposible. Verifica el estado del disco, analiza errores e intenta repararlos. Marca como inutilizables los sectores que no puede reparar.</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--text2)">
+        <li style="color:var(--green)">✓ Datos irrecuperables (seguridad total)</li>
+        <li style="color:var(--green)">✓ Verifica y repara sectores dañados</li>
+        <li style="color:var(--green)">✓ Marca sectores inutilizables</li>
+        <li style="color:var(--red)">✗ El más lento de los tres</li>
+        <li style="color:var(--red)">✗ Puede reducir la vida útil del disco</li>
+      </ul>
+      <div style="margin-top:1rem;padding:.75rem;background:var(--red-bg);border-radius:var(--r);font-size:12px;color:var(--red)">
+        <strong>Cuándo usarlo:</strong> Antes de vender o donar un disco, o cuando hay sectores dañados que necesitan verificación profunda.
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TABLA COMPARATIVA -->
+  <p class="section-label">Tabla comparativa</p>
+  <div class="compare-table" style="margin-bottom:2rem">
+    <table>
+      <thead><tr>
+        <th style="width:220px">Criterio</th>
+        <th class="fs-th">⚡ Rápido</th>
+        <th class="fs-th">🔍 Normal / Completo</th>
+        <th class="fs-th">🔒 Bajo nivel</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td>Borra rutas de archivos</td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+        </tr>
+        <tr>
+          <td>Borra y sobrescribe datos</td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+        </tr>
+        <tr>
+          <td>Mantiene sistema de archivos</td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+        </tr>
+        <tr>
+          <td>Detecta sectores defectuosos</td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+        </tr>
+        <tr>
+          <td>Repara sectores defectuosos</td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Intenta</div></td>
+        </tr>
+        <tr>
+          <td>Recuperación de datos posible</td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Alta</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-amber">!</span> Difícil</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> Imposible</div></td>
+        </tr>
+        <tr>
+          <td>Velocidad</td>
+          <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Muy rápido</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-amber">!</span> Lento</div></td>
+          <td><div class="sem-wrap"><span class="sem sem-red">✗</span> Muy lento</div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- NOTA IMPORTANTE -->
+  <div style="background:var(--amber-bg);border:1px solid #e8c87a;border-radius:var(--r);padding:1rem 1.25rem;font-size:13px;color:var(--amber);margin-bottom:1.5rem">
+    <strong>Importante:</strong> El formateo rápido no elimina realmente los datos del disco — solo borra las referencias a dónde están. Con herramientas de recuperación, esos archivos pueden volver a aparecer. Si la unidad va a pasar a otras manos, usar siempre formateo normal o bajo nivel.
+  </div>
+
+  <!-- ¿QUÉ PASA ANTES DEL FORMATEO? -->
+  <p class="section-label">Relación con particionado y sistemas de archivos</p>
+  <div class="card">
+    <ul style="list-style:none;display:flex;flex-direction:column;gap:12px;font-size:13px;color:var(--text2)">
+      <li style="display:flex;gap:12px">
+        <span style="font-family:var(--mono);font-weight:600;color:var(--accent);min-width:20px">1</span>
+        <span><strong style="color:var(--text)">Particionar</strong> — dividir el espacio físico del disco en secciones lógicas (particiones).</span>
+      </li>
+      <li style="display:flex;gap:12px">
+        <span style="font-family:var(--mono);font-weight:600;color:var(--accent);min-width:20px">2</span>
+        <span><strong style="color:var(--text)">Formatear</strong> — preparar cada partición para almacenar archivos. Es en este paso donde se elige y aplica el sistema de archivos (NTFS, FAT32, exFAT…).</span>
+      </li>
+      <li style="display:flex;gap:12px">
+        <span style="font-family:var(--mono);font-weight:600;color:var(--accent);min-width:20px">3</span>
+        <span><strong style="color:var(--text)">Usar</strong> — la partición ya formateada está lista para guardar archivos, instalar un SO, etc.</span>
+      </li>
+    </ul>
+  </div>
+
 </div>
 
 <!-- ══════════════════════════════════════════ -->
@@ -871,6 +1133,20 @@ function closeModalBtn(){ document.getElementById('modal-overlay').classList.rem
 
 /* ── GUÍA DE CLASE ── */
 function toggleAct(id){ document.getElementById(id).classList.toggle('open'); }
+
+/* ── NAV HAMBURGER ── */
+function toggleNav(){
+  const list = document.getElementById('nav-links-list');
+  const btn  = document.getElementById('nav-toggle');
+  const open = list.classList.toggle('open');
+  btn.textContent = open ? '✕' : '☰';
+}
+function closeNav(){
+  const list = document.getElementById('nav-links-list');
+  const btn  = document.getElementById('nav-toggle');
+  list.classList.remove('open');
+  btn.textContent = '☰';
+}
 </script>
 </body>
 </html>
