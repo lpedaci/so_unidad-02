@@ -662,13 +662,11 @@
     <div class="login-header">
       <div class="login-icon">🔑</div>
       <h2>Acceso docente</h2>
-      <p>Ingresá tus credenciales para acceder al panel de administración.</p>
+      <p>Ingresá tu contraseña para continuar.</p>
     </div>
-    <div class="login-form">
-      <div class="form-group">
-        <label for="login-username">Usuario</label>
-        <input type="text" id="login-username" autocomplete="username" placeholder="docente">
-      </div>
+
+    <!-- Formulario login -->
+    <div class="login-form" id="login-form-section">
       <div class="form-group">
         <label for="login-password">Contraseña</label>
         <input type="password" id="login-password" autocomplete="current-password" placeholder="••••••••">
@@ -678,8 +676,12 @@
       <button class="login-btn-secondary" onclick="showChangePassword()">Cambiar contraseña</button>
     </div>
 
-    <!-- Formulario cambio de contraseña (oculto por defecto) -->
+    <!-- Formulario cambio de contraseña -->
     <div class="change-pw-form" id="change-pw-form">
+      <div class="form-group">
+        <label for="cp-email">Correo autorizado</label>
+        <input type="email" id="cp-email" autocomplete="off" placeholder="tu@gmail.com">
+      </div>
       <div class="form-group">
         <label for="cp-current">Contraseña actual</label>
         <input type="password" id="cp-current" autocomplete="current-password" placeholder="••••••••">

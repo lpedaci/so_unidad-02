@@ -5,27 +5,22 @@
 'use strict';
 
 /* ── CREDENCIALES HASHEADAS (SHA-256) ──────────────
-   Usuario: docente
    Contraseña por defecto: docente2025
-   El hash puede ser sobreescrito por el docente via
-   la función "Cambiar contraseña" y se guarda en localStorage.
+   Correo autorizado para cambio de contraseña: hasheado
+   Ningún dato sensible aparece en texto plano.
    ─────────────────────────────────────────────────── */
 const AUTH = {
-  user:        'docente',
-  defaultHash: '74ee11d7051b6f6eafe1f45c7df7a2add616258621bf5839f47e73f9496c0eb5'
+  defaultHash: '9910e3af60a875b0e651b192d7c035ec84383f5850740b27238fc650f9ed354b',
+  emailHash:   'b13adf24c7c247eb548f86f4cf24a87c8d0b6c47609dec9d097c2bcd93165c49'
 };
+
 const PW_STORAGE_KEY = 'so_u2_pw_hash';
 
-/** Devuelve el hash vigente (custom si existe, sino el default) */
 function getCurrentHash() {
   return localStorage.getItem(PW_STORAGE_KEY) || AUTH.defaultHash;
 }
 
-/* ── PESTAÑAS CONFIGURABLES ─────────────────────────
-   'inicio' está siempre visible y no es configurable.
-   Las pestañas públicas (publicTabs) son visibles a todos.
-   Las pestañas de docente (docenteTabs) solo cuando hay sesión activa.
-   ─────────────────────────────────────────────────── */
+/* ── PESTAÑAS CONFIGURABLES ── */
 const ALL_TABS = [
   { id: 'inicio',      label: 'Inicio',              locked: true  },
   { id: 'particiones', label: 'Particiones',          locked: false },
@@ -36,11 +31,9 @@ const ALL_TABS = [
 ];
 
 const STORAGE_KEY = 'so_u2_tab_config';
-
-/* ── ESTADO ── */
 let isLoggedIn = false;
 
-/* ── HASH SHA-256 (Web Crypto API) ── */
+/* ── SHA-256 ── */
 async function sha256(str) {
   const buf  = new TextEncoder().encode(str);
   const hash = await crypto.subtle.digest('SHA-256', buf);
@@ -49,62 +42,32 @@ async function sha256(str) {
     .join('');
 }
 
-/* ── CONFIGURACIÓN DE PESTAÑAS ── */
-
-/**
- * Devuelve la config guardada en localStorage, o la por defecto.
- * Formato: { particiones: true, formateo: true, archivos: true }
- * Las docenteOnly siempre se excluyen del storage (se manejan por sesión).
- */
+/* ── CONFIG PESTAÑAS ── */
 function getTabConfig() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch (_) { /* ignore */ }
-  // Defaults: todas las pestañas públicas habilitadas
+  } catch (_) {}
   return { particiones: true, formateo: true, archivos: true };
 }
 
 function saveTabConfig(config) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  } catch (_) { /* ignore */ }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (_) {}
 }
 
-/* ── VISIBILIDAD DE NAV ITEMS ── */
 function applyTabVisibility() {
   const config = getTabConfig();
-
   ALL_TABS.forEach(tab => {
     const li = document.getElementById('nav-li-' + tab.id);
     if (!li) return;
-
-    if (tab.locked) {
-      // Inicio: siempre visible
-      li.style.display = '';
-      return;
-    }
-
-    if (tab.docenteOnly) {
-      // Solo visibles si hay sesión docente activa
-      li.style.display = isLoggedIn ? '' : 'none';
-      return;
-    }
-
-    // Pestañas públicas configurables
-    const enabled = isLoggedIn
-      ? true                     // docente ve todo
-      : (config[tab.id] !== false); // público: según config
-    li.style.display = enabled ? '' : 'none';
+    if (tab.locked) { li.style.display = ''; return; }
+    if (tab.docenteOnly) { li.style.display = isLoggedIn ? '' : 'none'; return; }
+    li.style.display = (isLoggedIn || config[tab.id] !== false) ? '' : 'none';
   });
-
-  // Si la pestaña activa quedó oculta, volver a inicio
   const activeLink = document.querySelector('.nav-links a.active');
   if (activeLink) {
-    const liParent = activeLink.closest('li');
-    if (liParent && liParent.style.display === 'none') {
-      showPage('inicio');
-    }
+    const li = activeLink.closest('li');
+    if (li && li.style.display === 'none') showPage('inicio');
   }
 }
 
@@ -112,18 +75,15 @@ function applyTabVisibility() {
 function buildDocentePanel() {
   const panel  = document.getElementById('docente-panel');
   const config = getTabConfig();
-
   if (!panel) return;
 
   const togglesHTML = ALL_TABS
     .filter(t => !t.locked && !t.docenteOnly)
     .map(tab => {
       const enabled = config[tab.id] !== false;
-      return `
-        <label class="tab-toggle ${enabled ? 'enabled' : ''}" id="toggle-label-${tab.id}"
+      return `<label class="tab-toggle ${enabled ? 'enabled' : ''}" id="toggle-label-${tab.id}"
                onclick="toggleTabConfig('${tab.id}', this)">
-          <span class="check-icon">${enabled ? '✓' : '○'}</span>
-          ${tab.label}
+          <span class="check-icon">${enabled ? '✓' : '○'}</span> ${tab.label}
         </label>`;
     }).join('');
 
@@ -136,9 +96,7 @@ function buildDocentePanel() {
       Seleccioná qué pestañas están visibles para los alumnos. Los cambios se guardan automáticamente.
     </p>
     <div class="panel-tabs-config">
-      <label class="tab-toggle locked">
-        <span class="check-icon">✓</span> Inicio
-      </label>
+      <label class="tab-toggle locked"><span class="check-icon">✓</span> Inicio</label>
       ${togglesHTML}
       <label class="tab-toggle locked" style="background:var(--amber-bg);border-color:var(--amber);color:var(--amber)">
         <span class="check-icon">✓</span> Casos de usuario <span style="font-size:10px">(docente)</span>
@@ -152,54 +110,50 @@ function buildDocentePanel() {
 
 function toggleTabConfig(tabId, labelEl) {
   const config  = getTabConfig();
-  const current = config[tabId] !== false;
-  config[tabId] = !current;
+  config[tabId] = (config[tabId] === false) ? true : false;
   saveTabConfig(config);
-
-  // Actualizar estilo del toggle
-  if (config[tabId]) {
+  if (config[tabId] !== false) {
     labelEl.classList.add('enabled');
     labelEl.querySelector('.check-icon').textContent = '✓';
   } else {
     labelEl.classList.remove('enabled');
     labelEl.querySelector('.check-icon').textContent = '○';
   }
-
   applyTabVisibility();
 }
 
 /* ── LOGIN ── */
 function openLoginModal() {
+  showLoginForm();
   document.getElementById('login-overlay').classList.add('open');
-  document.getElementById('login-username').focus();
+  setTimeout(() => document.getElementById('login-password').focus(), 50);
 }
 
 function closeLoginModal() {
   document.getElementById('login-overlay').classList.remove('open');
   document.getElementById('login-error').classList.remove('visible');
-  document.getElementById('login-username').value = '';
   document.getElementById('login-password').value = '';
+  hideChangePassword();
 }
 
 async function doLogin() {
-  const user     = document.getElementById('login-username').value.trim();
   const password = document.getElementById('login-password').value;
   const errorEl  = document.getElementById('login-error');
 
-  if (!user || !password) {
-    errorEl.textContent = 'Completá usuario y contraseña.';
+  if (!password) {
+    errorEl.textContent = 'Ingresá la contraseña.';
     errorEl.classList.add('visible');
     return;
   }
 
   const hashed = await sha256(password);
 
-  if (user === AUTH.user && hashed === getCurrentHash()) {
+  if (hashed === getCurrentHash()) {
     isLoggedIn = true;
     closeLoginModal();
     onLoginSuccess();
   } else {
-    errorEl.textContent = 'Usuario o contraseña incorrectos.';
+    errorEl.textContent = 'Contraseña incorrecta.';
     errorEl.classList.add('visible');
     document.getElementById('login-password').value = '';
     document.getElementById('login-password').focus();
@@ -207,106 +161,105 @@ async function doLogin() {
 }
 
 function onLoginSuccess() {
-  // Actualizar botón nav
   const btn = document.getElementById('nav-login-btn');
   if (btn) {
-    btn.textContent = '👤 docente';
+    btn.textContent = '👤 Docente';
     btn.classList.add('logged-in');
     btn.onclick = doLogout;
   }
-
-  // Mostrar panel docente
   const panel = document.getElementById('docente-panel');
-  if (panel) {
-    buildDocentePanel();
-    panel.classList.add('visible');
-  }
-
+  if (panel) { buildDocentePanel(); panel.classList.add('visible'); }
   applyTabVisibility();
 }
 
 function doLogout() {
   isLoggedIn = false;
-
   const btn = document.getElementById('nav-login-btn');
   if (btn) {
     btn.innerHTML = '🔑 Docente';
     btn.classList.remove('logged-in');
     btn.onclick = openLoginModal;
   }
-
   const panel = document.getElementById('docente-panel');
   if (panel) panel.classList.remove('visible');
-
   applyTabVisibility();
 }
 
-/* ── ENTER en el form de login ── */
-function onLoginKeydown(e) {
-  if (e.key === 'Enter') doLogin();
+/* ── CAMBIO DE CONTRASEÑA ── */
+function showLoginForm() {
+  document.getElementById('login-form-section').style.display = '';
+  document.getElementById('change-pw-form').style.display     = 'none';
 }
 
-/* ── CAMBIO DE CONTRASEÑA ── */
 function showChangePassword() {
-  document.querySelector('.login-form').style.display       = 'none';
-  document.getElementById('change-pw-form').style.display  = 'flex';
+  document.getElementById('login-form-section').style.display = 'none';
+  document.getElementById('change-pw-form').style.display     = 'flex';
   document.getElementById('cp-error').classList.remove('visible');
-  document.getElementById('cp-success').style.display      = 'none';
-  document.getElementById('cp-current').value  = '';
-  document.getElementById('cp-new').value      = '';
-  document.getElementById('cp-confirm').value  = '';
-  document.getElementById('cp-current').focus();
+  document.getElementById('cp-success').style.display         = 'none';
+  ['cp-email','cp-current','cp-new','cp-confirm']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  document.getElementById('cp-email').focus();
 }
 
 function hideChangePassword() {
-  document.querySelector('.login-form').style.display       = '';
-  document.getElementById('change-pw-form').style.display  = 'none';
+  showLoginForm();
 }
 
 async function doChangePassword() {
-  const current  = document.getElementById('cp-current').value;
-  const newPw    = document.getElementById('cp-new').value;
-  const confirm  = document.getElementById('cp-confirm').value;
-  const errorEl  = document.getElementById('cp-error');
-  const successEl = document.getElementById('cp-success');
+  const email   = document.getElementById('cp-email').value.trim().toLowerCase();
+  const current = document.getElementById('cp-current').value;
+  const newPw   = document.getElementById('cp-new').value;
+  const confirm = document.getElementById('cp-confirm').value;
+  const errEl   = document.getElementById('cp-error');
+  const okEl    = document.getElementById('cp-success');
 
-  errorEl.classList.remove('visible');
-  successEl.style.display = 'none';
+  errEl.classList.remove('visible');
+  okEl.style.display = 'none';
 
-  if (!current || !newPw || !confirm) {
-    errorEl.textContent = 'Completá todos los campos.';
-    errorEl.classList.add('visible');
-    return;
-  }
-  if (newPw.length < 6) {
-    errorEl.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.';
-    errorEl.classList.add('visible');
-    return;
-  }
-  if (newPw !== confirm) {
-    errorEl.textContent = 'Las contraseñas nuevas no coinciden.';
-    errorEl.classList.add('visible');
+  if (!email || !current || !newPw || !confirm) {
+    errEl.textContent = 'Completá todos los campos.';
+    errEl.classList.add('visible');
     return;
   }
 
+  // 1. Verificar correo autorizado
+  const emailHashed = await sha256(email);
+  if (emailHashed !== AUTH.emailHash) {
+    errEl.textContent = 'El correo ingresado no está autorizado.';
+    errEl.classList.add('visible');
+    document.getElementById('cp-email').value = '';
+    document.getElementById('cp-email').focus();
+    return;
+  }
+
+  // 2. Verificar contraseña actual
   const currentHashed = await sha256(current);
   if (currentHashed !== getCurrentHash()) {
-    errorEl.textContent = 'La contraseña actual es incorrecta.';
-    errorEl.classList.add('visible');
+    errEl.textContent = 'La contraseña actual es incorrecta.';
+    errEl.classList.add('visible');
     document.getElementById('cp-current').value = '';
     document.getElementById('cp-current').focus();
     return;
   }
 
-  const newHashed = await sha256(newPw);
-  localStorage.setItem(PW_STORAGE_KEY, newHashed);
+  // 3. Validar nueva contraseña
+  if (newPw.length < 6) {
+    errEl.textContent = 'La nueva contraseña debe tener al menos 6 caracteres.';
+    errEl.classList.add('visible');
+    return;
+  }
+  if (newPw !== confirm) {
+    errEl.textContent = 'Las contraseñas nuevas no coinciden.';
+    errEl.classList.add('visible');
+    return;
+  }
 
-  successEl.style.display = 'block';
-  document.getElementById('cp-new').value     = '';
-  document.getElementById('cp-confirm').value = '';
-  document.getElementById('cp-current').value = '';
+  // 4. Guardar nuevo hash
+  localStorage.setItem(PW_STORAGE_KEY, await sha256(newPw));
+  okEl.style.display = 'block';
+  ['cp-email','cp-current','cp-new','cp-confirm']
+    .forEach(id => { document.getElementById(id).value = ''; });
 
-  // Volver al login tras 2 segundos
   setTimeout(hideChangePassword, 2000);
 }
 
@@ -314,11 +267,14 @@ async function doChangePassword() {
 document.addEventListener('DOMContentLoaded', () => {
   applyTabVisibility();
 
-  // Bind tecla Enter en inputs del login
-  const inputs = document.querySelectorAll('#login-username, #login-password');
-  inputs.forEach(inp => inp.addEventListener('keydown', onLoginKeydown));
+  document.getElementById('login-password')
+    .addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
-  // Cerrar overlay con click fuera del modal
+  ['cp-email','cp-current','cp-new','cp-confirm'].forEach(id => {
+    document.getElementById(id)
+      .addEventListener('keydown', e => { if (e.key === 'Enter') doChangePassword(); });
+  });
+
   document.getElementById('login-overlay').addEventListener('click', function(e) {
     if (e.target === this) closeLoginModal();
   });
