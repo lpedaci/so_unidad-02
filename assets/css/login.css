@@ -1,0 +1,248 @@
+/* ═══════════════════════════════════════════════════
+   SO · Unidad 2 — login.css
+   Estilos del sistema de login docente
+   ═══════════════════════════════════════════════════ */
+
+/* ── OVERLAY MODAL LOGIN ── */
+.login-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, .5);
+  z-index: 300;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.login-overlay.open { display: flex; }
+
+.login-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--rl);
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  position: relative;
+}
+
+.login-modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: var(--surface2);
+  border: none;
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+.login-modal-close:hover { background: var(--border); }
+
+.login-header {
+  margin-bottom: 1.5rem;
+}
+.login-header .login-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--accent-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: .75rem;
+}
+.login-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.login-header p {
+  font-size: 13px;
+  color: var(--text2);
+}
+
+/* ── FORM ── */
+.login-form { display: flex; flex-direction: column; gap: 1rem; }
+
+.form-group { display: flex; flex-direction: column; gap: 4px; }
+.form-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text2);
+  font-family: var(--mono);
+  letter-spacing: .04em;
+}
+.form-group input {
+  padding: .6rem .875rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  font-family: var(--sans);
+  font-size: 14px;
+  color: var(--text);
+  outline: none;
+  transition: border-color .15s;
+}
+.form-group input:focus { border-color: var(--accent); background: var(--surface); }
+
+.login-error {
+  background: var(--red-bg);
+  border: 1px solid #f5c0c0;
+  border-radius: 8px;
+  padding: .625rem .875rem;
+  font-size: 13px;
+  color: var(--red);
+  display: none;
+}
+.login-error.visible { display: block; }
+
+.login-btn {
+  padding: .7rem 1rem;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.login-btn:hover { opacity: .88; }
+
+.login-btn-secondary {
+  padding: .6rem 1rem;
+  background: none;
+  color: var(--text2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+}
+.login-btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+.login-success {
+  background: var(--green-bg);
+  border: 1px solid #a3d9bb;
+  border-radius: 8px;
+  padding: .625rem .875rem;
+  font-size: 13px;
+  color: var(--green);
+  display: none;
+}
+
+/* Formulario cambio de contraseña */
+.change-pw-form {
+  display: none;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ── PANEL DOCENTE ── */
+.docente-panel {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--rl);
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  display: none;
+}
+.docente-panel.visible { display: block; }
+
+.docente-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+.docente-panel-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.docente-panel-header h3 span.badge {
+  background: var(--accent-bg);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: .04em;
+}
+
+.logout-btn {
+  padding: 5px 14px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all .15s;
+}
+.logout-btn:hover { border-color: var(--red); color: var(--red); }
+
+.panel-tabs-config {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .625rem;
+}
+.tab-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all .15s;
+  user-select: none;
+}
+.tab-toggle input[type="checkbox"] { display: none; }
+.tab-toggle .check-icon { font-size: 12px; }
+.tab-toggle.enabled {
+  background: var(--accent-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+/* Inicio siempre activo, no modificable */
+.tab-toggle.locked {
+  opacity: .65;
+  cursor: not-allowed;
+  background: var(--surface2);
+  border-color: var(--border);
+  color: var(--text3);
+}
+
+.panel-save-note {
+  margin-top: .875rem;
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+}
+
+/* ── RESPONSIVE LOGIN ── */
+@media (max-width: 420px) {
+  .login-modal { padding: 1.25rem; }
+  .login-header h2 { font-size: 16px; }
+  .docente-panel { padding: 1rem; }
+}
