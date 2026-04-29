@@ -15,20 +15,6 @@ Desarrollado para ser proyectado en clase y consultado desde dispositivos de los
 
 > Las últimas dos secciones son exclusivas del docente y requieren login.
 
-## Acceso docente
-
-El botón **Docente** en el nav abre un modal de autenticación.  
-Las credenciales por defecto son:
-
-```
-Usuario:     docente
-Contraseña:  docente2025
-```
-
-La contraseña puede cambiarse desde el mismo modal. El nuevo hash se guarda en `localStorage` del navegador.
-
-Una vez autenticado, el panel docente permite configurar qué pestañas son visibles para los alumnos.
-
 ## Estructura
 
 ```
@@ -46,11 +32,6 @@ so-unidad2/
         ├── usuarios.js
         └── guia.js
 ```
-
-## Despliegue
-
-Compatible con GitHub Pages. Subir el contenido de la carpeta `so-unidad2/` al repositorio y activar Pages desde la rama correspondiente.
-
 ---
 
 **Prof. Pedaci Lourdes** · [LinkedIn](https://www.linkedin.com/in/lourdes-pedaci/)
