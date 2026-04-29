@@ -34,6 +34,9 @@
     <li id="nav-li-archivos">
       <a onclick="showPage('archivos');closeNav()" id="nav-archivos">Sistemas de archivos</a>
     </li>
+    <li id="nav-li-guia-armado">
+      <a onclick="showPage('guia-armado');closeNav()" id="nav-guia-armado">Guía de armado</a>
+    </li>
     <li id="nav-li-usuarios">
       <a onclick="showPage('usuarios');closeNav()" id="nav-usuarios">Casos de usuario</a>
     </li>
@@ -86,25 +89,30 @@
       </div>
     </div>
     <div class="nav-cards">
-      <div class="nav-card" onclick="showPage('particiones')">
+      <div class="nav-card" id="nav-card-particiones" onclick="showPage('particiones')">
         <div class="icon" style="background:var(--accent-bg)">🗂️</div>
         <h3>Particiones</h3>
         <p>MBR vs GPT, tipos de partición, diagramas interactivos de disco.</p>
         <span class="arrow">→</span>
       </div>
-      <div class="nav-card" onclick="showPage('formateo')">
+      <div class="nav-card" id="nav-card-formateo" onclick="showPage('formateo')">
         <div class="icon" style="background:var(--red-bg)">🗑️</div>
         <h3>Formateo</h3>
         <p>Tipos de formateo: rápido, normal-completo y bajo nivel. Cuándo usar cada uno.</p>
         <span class="arrow">→</span>
       </div>
-      <div class="nav-card" onclick="showPage('archivos')">
+      <div class="nav-card" id="nav-card-archivos" onclick="showPage('archivos')">
         <div class="icon" style="background:var(--green-bg)">📋</div>
         <h3>Sistemas de archivos</h3>
         <p>Comparativa FAT32, NTFS, exFAT con tabla semáforo y casos de uso.</p>
         <span class="arrow">→</span>
       </div>
-      
+      <div class="nav-card" id="nav-card-guia-armado" onclick="showPage('guia-armado')">
+        <div class="icon" style="background:#ede9fe">💾</div>
+        <h3>Guía de armado</h3>
+        <p>Esquemas de configuración para MBR y GPT según el uso: SO, datos o ambos.</p>
+        <span class="arrow">→</span>
+      </div>
     </div>
   </div>
 
@@ -496,6 +504,306 @@
         </li>
       </ul>
     </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!--  GUÍA DE ARMADO                            -->
+  <!-- ══════════════════════════════════════════ -->
+  <div id="page-guia-armado" class="page">
+    <div class="page-header">
+      <p class="label">Unidad 2 · TP01</p>
+      <h1>Guía de armado</h1>
+      <p>Esquemas de configuración recomendados para MBR y GPT según el uso previsto del disco: sistema operativo, almacenamiento de datos, o ambos.</p>
+    </div>
+
+    <!-- ── MBR ── -->
+    <p class="section-label" style="margin-top:0">MBR (BIOS / Legacy)</p>
+    <div class="grid-2">
+
+      <!-- MBR SO + almacenamiento -->
+      <div class="card" style="overflow:hidden">
+        <div class="ga-card-header" style="background:#fce4ec;border-bottom:1px solid #f8bbd0">
+          <div style="display:flex;align-items:center;gap:8px"><span class="pill pill-blue">SO + almacenamiento</span></div>
+          <div class="ga-title" style="color:#c2255c">MBR · SO + datos</div>
+          <div class="ga-sub" style="color:#c2255c">1 TB · BIOS / Legacy</div>
+        </div>
+
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Disco 1 TB · Esquema MBR</p>
+        <div class="ga-disk-bar">
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+          <div class="ga-seg" style="width:25%;background:#1971c2"><span class="sn">C: SO</span><span class="sz">300 GB</span></div>
+          <div class="ga-seg" style="width:20%;background:#4dabf7"><span class="sn">D: trabajo</span><span class="sz">200 GB</span></div>
+          <div class="ga-ext" style="width:30%;background:#2b8a3e">
+            <span class="ga-ext-label">Extendida</span>
+            <div class="ga-ext-logical" style="background:repeating-linear-gradient(135deg,#b2f2bb,#b2f2bb 4px,#d3f9d8 4px,#d3f9d8 8px)">
+              <span class="sn" style="color:#1a5c28">E: personal</span>
+              <span class="sz" style="color:#1a5c28">350 GB</span>
+            </div>
+          </div>
+          <div class="ga-seg" style="width:16%;background:#dee2e6"><span class="sn" style="color:#868e96">Sin asignar</span><span class="sz" style="color:#868e96">~170 GB</span></div>
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+        </div>
+
+        <div class="ga-legend">
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#c2255c"></div>Inicio / Fin MBR</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#1971c2"></div>C: SO Windows (primaria)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4dabf7"></div>D: Trabajo (primaria datos)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#2b8a3e"></div>Extendida (contenedor)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:repeating-linear-gradient(135deg,#b2f2bb,#b2f2bb 4px,#d3f9d8 4px,#d3f9d8 8px);border:1px solid #2b8a3e"></div>E: Personal (lógica)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#dee2e6;border:1px solid var(--border)"></div>Sin asignar</div>
+        </div>
+
+        <div class="ga-note" style="background:var(--accent-bg);border:1px solid #c5d0f8;color:var(--accent)">
+          <strong>MBR · SO + datos:</strong> Se usan 2 particiones primarias (C: y D:) más una extendida con 1 lógica (E:). Ideal para BIOS con discos &lt; 2 TB. Windows 11 requiere UEFI; en BIOS solo instala hasta Windows 10.
+        </div>
+
+        <div style="border-top:1px solid var(--surface2);padding-top:.75rem;margin-top:.25rem">
+          <div class="spec-row"><span class="spec-key">Esquema</span><span class="spec-val">MBR</span></div>
+          <div class="spec-row"><span class="spec-key">Firmware</span><span class="spec-val">BIOS / UEFI Legacy</span></div>
+          <div class="spec-row"><span class="spec-key">C: SO Windows</span><span class="spec-val">300 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">D: Trabajo</span><span class="spec-val">200 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">E: Personal (lógica)</span><span class="spec-val">350 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">Límite particiones</span><span class="spec-val">4 primarias (o 3 + extendida)</span></div>
+        </div>
+      </div>
+
+      <!-- MBR Solo almacenamiento -->
+      <div class="card" style="overflow:hidden;margin-top:0">
+        <div class="ga-card-header" style="background:var(--amber-bg);border-bottom:1px solid #e8c87a">
+          <div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">Solo almacenamiento</span></div>
+          <div class="ga-title" style="color:var(--amber)">MBR · Solo datos</div>
+          <div class="ga-sub" style="color:var(--amber)">1 TB · BIOS / Legacy</div>
+        </div>
+
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Disco 1 TB · Esquema MBR</p>
+        <div class="ga-disk-bar">
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+          <div class="ga-seg" style="width:30%;background:#4dabf7"><span class="sn">D: datos A</span><span class="sz">400 GB</span></div>
+          <div class="ga-seg" style="width:26%;background:#4dabf7"><span class="sn">E: datos B</span><span class="sz">300 GB</span></div>
+          <div class="ga-ext" style="width:24%;background:#2b8a3e">
+            <span class="ga-ext-label">Extendida</span>
+            <div class="ga-ext-logical" style="background:repeating-linear-gradient(135deg,#b2f2bb,#b2f2bb 4px,#d3f9d8 4px,#d3f9d8 8px)">
+              <span class="sn" style="color:#1a5c28">F: datos C</span>
+              <span class="sz" style="color:#1a5c28">200 GB</span>
+            </div>
+          </div>
+          <div class="ga-seg" style="width:11%;background:#dee2e6"><span class="sn" style="color:#868e96">Libre</span><span class="sz" style="color:#868e96">~120 GB</span></div>
+          <div class="ga-seg narrow" style="width:3%;background:#c2255c;flex-shrink:0"></div>
+        </div>
+
+        <div class="ga-legend">
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#c2255c"></div>Inicio / Fin MBR</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4dabf7"></div>Primaria de datos</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#2b8a3e"></div>Extendida (contenedor)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:repeating-linear-gradient(135deg,#b2f2bb,#b2f2bb 4px,#d3f9d8 4px,#d3f9d8 8px);border:1px solid #2b8a3e"></div>Lógica (datos)</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#dee2e6;border:1px solid var(--border)"></div>Sin asignar</div>
+        </div>
+
+        <div class="ga-note" style="background:var(--amber-bg);border:1px solid #e8c87a;color:var(--amber)">
+          <strong>MBR · Solo datos:</strong> Disco secundario de almacenamiento. Sin SO, se usan 2 primarias + 1 extendida con 1 lógica. Si se necesitan más particiones en el futuro, la extendida ya está habilitada.
+        </div>
+
+        <div style="border-top:1px solid var(--surface2);padding-top:.75rem;margin-top:.25rem">
+          <div class="spec-row"><span class="spec-key">Esquema</span><span class="spec-val">MBR</span></div>
+          <div class="spec-row"><span class="spec-key">Firmware</span><span class="spec-val">BIOS / UEFI Legacy</span></div>
+          <div class="spec-row"><span class="spec-key">D: Datos A</span><span class="spec-val">400 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">E: Datos B</span><span class="spec-val">300 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">F: Datos C (lógica)</span><span class="spec-val">200 GB · NTFS / exFAT</span></div>
+          <div class="spec-row"><span class="spec-key">Uso SO</span><span class="spec-val">Solo almacenamiento</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── GPT ── -->
+    <p class="section-label">GPT (UEFI)</p>
+    <div class="grid-2">
+
+      <!-- GPT SO + almacenamiento -->
+      <div class="card" style="overflow:hidden">
+        <div class="ga-card-header" style="background:#ede9fe;border-bottom:1px solid #c4b5fd">
+          <div style="display:flex;align-items:center;gap:8px"><span class="pill pill-blue">SO + almacenamiento</span></div>
+          <div class="ga-title" style="color:#6741d9">GPT · SO + datos</div>
+          <div class="ga-sub" style="color:#6741d9">1 TB · UEFI</div>
+        </div>
+
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Disco 1 TB · Esquema GPT</p>
+        <div class="ga-disk-bar">
+          <div class="ga-seg narrow" style="width:3%;background:#3b1f8c;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#6741d9;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#7c3aed;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#9b59d4;flex-shrink:0"></div>
+          <div class="ga-seg" style="width:20%;background:#1971c2"><span class="sn">C: SO</span><span class="sz">260 GB</span></div>
+          <div class="ga-seg narrow" style="width:5%;background:#1558a0;flex-shrink:0"></div>
+          <div class="ga-seg" style="width:17%;background:#4dabf7"><span class="sn">D: trabajo</span><span class="sz">200 GB</span></div>
+          <div class="ga-seg" style="width:15%;background:#4dabf7"><span class="sn">E: personal</span><span class="sz">180 GB</span></div>
+          <div class="ga-seg" style="width:24%;background:#dee2e6"><span class="sn" style="color:#868e96">Sin asignar</span><span class="sz" style="color:#868e96">~357 GB</span></div>
+          <div class="ga-seg narrow" style="width:4%;background:#4c2fa8;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#6741d9;opacity:.7;flex-shrink:0"></div>
+        </div>
+
+        <div class="ga-legend">
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#3b1f8c"></div>Protective MBR</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#6741d9"></div>Cabecera GPT</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#7c3aed"></div>EFI System Partition</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#9b59d4"></div>MSR</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#1971c2"></div>C: SO Windows</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#1558a0"></div>Recovery Partition</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4dabf7"></div>Primaria de datos</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#dee2e6;border:1px solid var(--border)"></div>Sin asignar</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4c2fa8"></div>Backup cabecera GPT</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#6741d9;opacity:.7"></div>Fin cabecera GPT</div>
+        </div>
+
+        <div class="ga-note" style="background:#ede9fe;border:1px solid #c4b5fd;color:#6741d9">
+          <strong>GPT · SO + datos:</strong> Windows instala automáticamente EFI, MSR y Recovery al formatear en UEFI. Sin límite práctico de particiones primarias: no se necesita extendida ni lógicas. Obligatorio para Windows 11.
+        </div>
+
+        <div style="border-top:1px solid var(--surface2);padding-top:.75rem;margin-top:.25rem">
+          <div class="spec-row"><span class="spec-key">Esquema</span><span class="spec-val">GPT</span></div>
+          <div class="spec-row"><span class="spec-key">Firmware</span><span class="spec-val">UEFI</span></div>
+          <div class="spec-row"><span class="spec-key">EFI System Partition</span><span class="spec-val">260 MB · FAT32 (auto)</span></div>
+          <div class="spec-row"><span class="spec-key">MSR</span><span class="spec-val">16 MB · sin formato (auto)</span></div>
+          <div class="spec-row"><span class="spec-key">C: SO Windows</span><span class="spec-val">260 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">Recovery Partition</span><span class="spec-val">~1 GB · NTFS (auto)</span></div>
+          <div class="spec-row"><span class="spec-key">D: Trabajo / E: Personal</span><span class="spec-val">200 + 180 GB · NTFS</span></div>
+        </div>
+      </div>
+
+      <!-- GPT Solo almacenamiento -->
+      <div class="card" style="overflow:hidden;margin-top:0">
+        <div class="ga-card-header" style="background:var(--amber-bg);border-bottom:1px solid #e8c87a">
+          <div style="display:flex;align-items:center;gap:8px"><span class="pill pill-amber">Solo almacenamiento</span></div>
+          <div class="ga-title" style="color:var(--amber)">GPT · Solo datos</div>
+          <div class="ga-sub" style="color:var(--amber)">1 TB · UEFI</div>
+        </div>
+
+        <p style="font-family:var(--mono);font-size:10px;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px">Disco 1 TB · Esquema GPT</p>
+        <div class="ga-disk-bar">
+          <div class="ga-seg narrow" style="width:3%;background:#3b1f8c;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#6741d9;flex-shrink:0"></div>
+          <div class="ga-seg" style="width:29%;background:#4dabf7"><span class="sn">D: datos A</span><span class="sz">350 GB</span></div>
+          <div class="ga-seg" style="width:25%;background:#4dabf7"><span class="sn">E: datos B</span><span class="sz">300 GB</span></div>
+          <div class="ga-seg" style="width:19%;background:#4dabf7"><span class="sn">F: backup</span><span class="sz">200 GB</span></div>
+          <div class="ga-seg" style="width:14%;background:#dee2e6"><span class="sn" style="color:#868e96">Libre</span><span class="sz" style="color:#868e96">~170 GB</span></div>
+          <div class="ga-seg narrow" style="width:4%;background:#4c2fa8;flex-shrink:0"></div>
+          <div class="ga-seg narrow" style="width:3%;background:#6741d9;opacity:.7;flex-shrink:0"></div>
+        </div>
+
+        <div class="ga-legend">
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#3b1f8c"></div>Protective MBR</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#6741d9"></div>Cabecera GPT / Fin GPT</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4dabf7"></div>Primaria de datos</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#dee2e6;border:1px solid var(--border)"></div>Sin asignar</div>
+          <div class="ga-legend-item"><div class="ga-legend-dot" style="background:#4c2fa8"></div>Backup cabecera GPT</div>
+        </div>
+
+        <div class="ga-note" style="background:var(--amber-bg);border:1px solid #e8c87a;color:var(--amber)">
+          <strong>GPT · Solo datos:</strong> Disco secundario puro. Sin SO no se crean EFI ni MSR. GPT solo agrega el Protective MBR y las cabeceras de inicio y fin. Ideal para discos adicionales de gran capacidad.
+        </div>
+
+        <div style="border-top:1px solid var(--surface2);padding-top:.75rem;margin-top:.25rem">
+          <div class="spec-row"><span class="spec-key">Esquema</span><span class="spec-val">GPT</span></div>
+          <div class="spec-row"><span class="spec-key">Firmware</span><span class="spec-val">UEFI</span></div>
+          <div class="spec-row"><span class="spec-key">D: Datos A</span><span class="spec-val">350 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">E: Datos B</span><span class="spec-val">300 GB · NTFS</span></div>
+          <div class="spec-row"><span class="spec-key">F: Backup</span><span class="spec-val">200 GB · NTFS / exFAT</span></div>
+          <div class="spec-row"><span class="spec-key">Sin EFI / MSR</span><span class="spec-val">Disco de datos puro</span></div>
+          <div class="spec-row"><span class="spec-key">Límite particiones</span><span class="spec-val">Hasta 128 primarias</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── PARTICIONES ESPECIALES GPT ── -->
+    <p class="section-label">Particiones especiales GPT</p>
+    <div class="grid-3">
+
+      <div class="card" style="border-top:3px solid #7c3aed">
+        <div class="card-title">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:#ede9fe;font-size:14px;flex-shrink:0">💾</span>
+          EFI System Partition
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li><strong style="color:var(--text)">¿Qué es?</strong> Contiene los cargadores de arranque del SO. Es la primera que lee el firmware UEFI al encender la PC.</li>
+          <li><strong style="color:var(--text)">Tamaño</strong> 260 MB (mínimo recomendado por Microsoft)</li>
+          <li><strong style="color:var(--text)">Sistema de archivos</strong> FAT32 (requerido por el estándar UEFI)</li>
+          <li><strong style="color:var(--text)">¿Quién la crea?</strong> El instalador del SO, automáticamente</li>
+          <li><strong style="color:var(--text)">¿Visible en Windows?</strong> No aparece en el Explorador de archivos</li>
+        </ul>
+      </div>
+
+      <div class="card" style="border-top:3px solid #9b59d4">
+        <div class="card-title">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:#f3e8ff;font-size:14px;flex-shrink:0">📋</span>
+          Microsoft Reserved (MSR)
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li><strong style="color:var(--text)">¿Qué es?</strong> Espacio reservado por Windows para uso interno: herramientas de administración de disco, conversión de básico a dinámico, etc.</li>
+          <li><strong style="color:var(--text)">Tamaño</strong> 16 MB (discos &lt; 16 GB) · 128 MB (discos &gt; 16 GB)</li>
+          <li><strong style="color:var(--text)">Sistema de archivos</strong> Sin formato (no tiene)</li>
+          <li><strong style="color:var(--text)">¿Quién la crea?</strong> El instalador de Windows, automáticamente</li>
+          <li><strong style="color:var(--text)">¿Visible en Windows?</strong> No, oculta completamente al usuario</li>
+        </ul>
+      </div>
+
+      <div class="card" style="border-top:3px solid #1558a0">
+        <div class="card-title">
+          <span style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:#e8f0fb;font-size:14px;flex-shrink:0">🔄</span>
+          Recovery Partition (WinRE)
+        </div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:8px;font-size:13px;color:var(--text2)">
+          <li><strong style="color:var(--text)">¿Qué es?</strong> Contiene el Entorno de Recuperación de Windows (WinRE). Permite reparar o restablecer el SO sin un medio externo.</li>
+          <li><strong style="color:var(--text)">Tamaño</strong> ~600 MB – 1 GB</li>
+          <li><strong style="color:var(--text)">Sistema de archivos</strong> NTFS</li>
+          <li><strong style="color:var(--text)">¿Quién la crea?</strong> El instalador de Windows, automáticamente</li>
+          <li><strong style="color:var(--text)">¿Visible en Windows?</strong> No en el Explorador; sí en Administración de discos</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- ── TABLA COMPATIBILIDAD CPU ── -->
+    <p class="section-label">Compatibilidad CPU — arquitectura x86 / x64</p>
+    <div class="compare-table" style="margin-bottom:2rem">
+      <table>
+        <thead><tr>
+          <th style="width:240px">Ítem</th>
+          <th class="fs-th">CPU x86 (32 bits)</th>
+          <th class="fs-th">CPU x64 (64 bits)</th>
+        </tr></thead>
+        <tbody>
+          <tr>
+            <td>SO 32 bits</td>
+            <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+            <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          </tr>
+          <tr>
+            <td>SO 64 bits</td>
+            <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+            <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          </tr>
+          <tr>
+            <td>Apps 32 bits</td>
+            <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+            <td><div class="sem-wrap"><span class="sem sem-green">✓</span> Sí</div></td>
+          </tr>
+          <tr>
+            <td>Apps 64 bits</td>
+            <td><div class="sem-wrap"><span class="sem sem-red">✗</span> No</div></td>
+            <td><div class="sem-wrap"><span class="sem sem-amber">!</span> Sí, excepto si el SO instalado es de 32 bits</div></td>
+          </tr>
+          <tr>
+            <td colspan="3" style="background:var(--accent-bg);color:var(--accent);font-size:12px;padding:.875rem 1rem;border-bottom:none">
+              <strong>Retrocompatibilidad:</strong> Un SO de 64 bits puede ejecutar aplicaciones de 32 bits, pero las mantiene aisladas en un subsistema separado (WoW64 en Windows). Por eso existen dos carpetas distintas: <strong>"Archivos de programa"</strong> (apps 64 bits) y <strong>"Archivos de programa (x86)"</strong> (apps 32 bits).
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
   <!-- ══════════════════════════════════════════ -->

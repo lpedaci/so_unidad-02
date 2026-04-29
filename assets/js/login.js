@@ -26,6 +26,7 @@ const ALL_TABS = [
   { id: 'particiones', label: 'Particiones',          locked: false },
   { id: 'formateo',    label: 'Formateo',             locked: false },
   { id: 'archivos',    label: 'Sistemas de archivos', locked: false },
+  { id: 'guia-armado', label: 'Guía de armado',        locked: false },
   { id: 'usuarios',    label: 'Casos de usuario',     locked: false, docenteOnly: true },
   { id: 'guia',        label: 'Guía de clase',        locked: false, docenteOnly: true },
 ];
@@ -48,7 +49,7 @@ function getTabConfig() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (_) {}
-  return { particiones: true, formateo: true, archivos: true };
+  return { particiones: true, formateo: true, archivos: true, 'guia-armado': true };
 }
 
 function saveTabConfig(config) {
@@ -58,11 +59,20 @@ function saveTabConfig(config) {
 function applyTabVisibility() {
   const config = getTabConfig();
   ALL_TABS.forEach(tab => {
-    const li = document.getElementById('nav-li-' + tab.id);
+    const li   = document.getElementById('nav-li-' + tab.id);
+    const card = document.getElementById('nav-card-' + tab.id);
     if (!li) return;
     if (tab.locked) { li.style.display = ''; return; }
-    if (tab.docenteOnly) { li.style.display = isLoggedIn ? '' : 'none'; return; }
-    li.style.display = (isLoggedIn || config[tab.id] !== false) ? '' : 'none';
+
+    let visible;
+    if (tab.docenteOnly) {
+      visible = isLoggedIn;
+    } else {
+      visible = isLoggedIn || config[tab.id] !== false;
+    }
+
+    li.style.display = visible ? '' : 'none';
+    if (card) card.style.display = visible ? '' : 'none';
   });
   const activeLink = document.querySelector('.nav-links a.active');
   if (activeLink) {

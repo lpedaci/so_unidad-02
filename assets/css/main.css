@@ -537,6 +537,90 @@ tr:hover td { background: var(--bg); }
 .mini-row { display: flex; height: 18px; border-radius: 4px; overflow: hidden; gap: 2px; }
 .mini-seg { height: 100%; border-radius: 3px; }
 
+/* ── GUÍA DE ARMADO ── */
+.ga-disk-bar {
+  display: flex;
+  height: 38px;
+  border-radius: 6px;
+  overflow: hidden;
+  width: 100%;
+  margin: .5rem 0;
+}
+.ga-seg {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 6px;
+  border-right: 2px solid rgba(255,255,255,.5);
+  overflow: hidden;
+  min-width: 0;
+  flex-shrink: 1;
+  flex-grow: 0;
+}
+.ga-seg:last-child { border-right: none; }
+.ga-seg .sn { font-size: 10px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+.ga-seg .sz { font-family: var(--mono); font-size: 8px; opacity: .8; white-space: nowrap; color: #fff; }
+.ga-seg.narrow {
+  padding: 0;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ga-ext {
+  display: flex;
+  flex-direction: column;
+  padding: 3px 3px 2px;
+  gap: 1px;
+  border-right: 2px solid rgba(255,255,255,.5);
+  overflow: hidden;
+  flex-shrink: 1;
+  flex-grow: 0;
+  min-width: 0;
+}
+.ga-ext:last-child { border-right: none; }
+.ga-ext-label { font-size: 7px; color: rgba(255,255,255,.65); letter-spacing: .04em; text-transform: uppercase; line-height: 1; flex-shrink: 0; }
+.ga-ext-logical {
+  flex: 1;
+  border-radius: 2px;
+  border: 1px solid rgba(43,138,62,.5);
+  display: flex;
+  align-items: center;
+  padding: 0 5px;
+  gap: 4px;
+  overflow: hidden;
+}
+.ga-ext-logical .sn { font-size: 9px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ga-ext-logical .sz { font-family: var(--mono); font-size: 8px; opacity: .7; white-space: nowrap; flex-shrink: 0; }
+
+.ga-card-header {
+  margin: -1.5rem -1.5rem 1.25rem;
+  padding: .875rem 1.25rem;
+  border-radius: calc(var(--rl) - 1px) calc(var(--rl) - 1px) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ga-title { font-size: 15px; font-weight: 600; }
+.ga-sub { font-size: 11px; font-family: var(--mono); opacity: .75; }
+
+.ga-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; margin: .75rem 0; }
+.ga-legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+.ga-legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+.ga-note { border-radius: var(--r); padding: .75rem 1rem; font-size: 12px; line-height: 1.55; margin: .75rem 0; }
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--surface2);
+}
+.spec-row:last-child { border-bottom: none; }
+.spec-key { font-family: var(--mono); font-size: 11px; color: var(--text3); flex-shrink: 0; }
+.spec-val { font-size: 12px; color: var(--text); text-align: right; }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 900px) {
   .nav-links a { padding: 0 .6rem; font-size: 12px; }
