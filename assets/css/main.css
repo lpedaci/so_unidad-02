@@ -111,6 +111,9 @@ nav {
   align-items: center;
   gap: 8px;
   cursor: pointer;
+  /* El brand nunca se parte ni se comprime */
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .nav-brand .dot {
@@ -123,11 +126,20 @@ nav {
 
 .nav-links {
   display: flex;
+  flex-wrap: nowrap;
   gap: 0;
   list-style: none;
   height: 100%;
-  flex: 1;
+  flex: 1 1 auto;
+  /* min-width:0 permite que el UL se encoja en vez de aplastar al brand.
+     Si aun asi no entra, scrollea en horizontal (sin barra visible). */
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.nav-links::-webkit-scrollbar { display: none; }
 
 .nav-links a {
   display: flex;
@@ -622,20 +634,32 @@ tr:hover td { background: var(--bg); }
 .spec-val { font-size: 12px; color: var(--text); text-align: right; }
 
 /* ── RESPONSIVE ── */
-@media (max-width: 900px) {
-  .nav-links a { padding: 0 .6rem; font-size: 12px; }
-  .nav-brand { margin-right: 1rem; }
+
+/* Desktop angosto: los 8 items siguen en una linea, solo mas compactos.
+   Debajo de 1024px no entran de ninguna forma -> hamburguesa. */
+@media (max-width: 1320px) {
+  nav { padding: 0 1.25rem; }
+  .nav-brand { margin-right: 1.25rem; }
+  .nav-links a { padding: 0 .55rem; font-size: 12px; }
+  .nav-login-btn { padding: 6px 10px; }
 }
 
-@media (max-width: 700px) {
-  /* Nav hamburger */
+@media (max-width: 1120px) {
+  nav { padding: 0 1rem; }
+  .nav-brand { margin-right: .875rem; }
+  .nav-links a { padding: 0 .4rem; font-size: 11.5px; }
+}
+
+/* Nav hamburguesa: tablet y mobile */
+@media (max-width: 1024px) {
   nav { padding: 0 1rem; position: relative; flex-wrap: wrap; height: auto; min-height: 56px; }
-  .nav-brand { height: 56px; flex-shrink: 0; }
+  .nav-brand { height: 56px; margin-right: 1rem; font-size: 13px; order: 1; }
   .nav-toggle {
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    order: 3;
+    margin-left: .5rem;
     height: 56px;
     background: none;
     border: none;
@@ -645,8 +669,9 @@ tr:hover td { background: var(--bg); }
     font-size: 20px;
     line-height: 1;
   }
-  .nav-login-btn { display: none; }
+  .nav-login-btn { order: 2; margin-left: auto; }
   .nav-links {
+    order: 4;
     display: none;
     flex-direction: column;
     width: 100%;
@@ -655,13 +680,18 @@ tr:hover td { background: var(--bg); }
     padding: .5rem 0;
     gap: 0;
     height: auto;
+    overflow: visible;
   }
   .nav-links.open { display: flex; }
   .nav-links li { width: 100%; }
   .nav-links a { height: 44px; padding: 0 1rem; font-size: 14px; border-bottom: none; border-left: 3px solid transparent; white-space: normal; }
   .nav-links a.active { border-left-color: var(--accent); background: var(--accent-bg); }
+}
 
-  /* Login btn dentro del menú mobile — eliminado */
+@media (max-width: 700px) {
+  /* Login btn fuera del nav en mobile: el toggle vuelve a la derecha */
+  .nav-login-btn { display: none; }
+  .nav-toggle { margin-left: auto; }
 
   /* Layout */
   main { padding: 1.25rem .875rem; }
